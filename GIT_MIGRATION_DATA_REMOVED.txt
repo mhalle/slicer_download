@@ -1,0 +1,4 @@
+98c33abe4106e508e73fda648b2657ac9e969fe24695f543dcde68cc71f3091b  apps/build-slicer-json/node_modules/sqlite3/deps/sqlite-autoconf-3080500.tar.gz
+997ed64205b720e06a2d59d6771438b69269184b316a9cfa7514637aacd24f2c  apps/build-slicer-json/node_modules/sqlite3/lib/binding/node-v11-darwin-x64/node_sqlite3.node
+72eb6efa7b4fe4c1b12b8e153c6e0df6b62722c8d80d35395227c31399f07daf  apps/parse-slicer-logs/data/2012-03-06/GeoLiteCity.dat
+13264d4c966ec3e2657dcfaccadaf271fb704f485387ea73e64cbed0edf13daa  apps/parse-slicer-logs/data/GeoLiteCity.dat
