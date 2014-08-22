@@ -9,10 +9,9 @@ def absPath(*args):
 sys.path.append(absPath('modules'))
 
 import re
-from uasparser2 import UASparser
+from uasparser2 import UASParser
 import apachelog
 import pygeoip
-# import pygeoip
 
 import sqlite3
 import datetime, time
@@ -108,6 +107,9 @@ def readAndParse(filenames):
 
 
         for line in fp:
+            if not bitstreamRE.search(line):
+                # if no bitstream ID, don't go any further
+                continue
             try:
                 data = p.parse(line)
             except apachelog.ApacheLogParserError:
@@ -205,7 +207,7 @@ def addGeoIPInfo(db):
     return
 
 def addUserAgentInfo(db):
-    uas_parser = UASparser(cache_dir='/tmp')
+    uas_parser = UASParser('/tmp', mem_cache_size=1000, cache_ttl=3600*24*7)
     uaCompleted = set()
     for ua in list(db.execute("""select useragent from access
                             except
