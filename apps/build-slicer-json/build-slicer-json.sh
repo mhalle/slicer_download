@@ -1,4 +1,4 @@
 #!/bin/sh
 
-exec node "$(dirname $0)"/index.js $@
+exec /usr/local/bin/node "$(dirname $0)"/index.js $@
 
