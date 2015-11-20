@@ -67,11 +67,11 @@ def downloadPage():
 def getLocalBitstreamURL(r):
     bitstreamId = r['bitstreams'][0]['bitstream_id']
 
-    downloadURL = '{}/{}'.format(LocalBitstreamPath, bitstreamId)
+    downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
     return downloadURL
 
 def redirectToSourceBitstream(bitstreamId):
-    midasBitstreamURL = '{}?bitstream={}'.format(DownloadURLBase, bitstreamId)
+    midasBitstreamURL = '{0}?bitstream={1}'.format(DownloadURLBase, bitstreamId)
     return flask.redirect(midasBitstreamURL)
 
 def cleanupMidasRecord(r):
@@ -99,7 +99,7 @@ def redirectToLocalBitstream():
         return flask.redirect(record['download_url'])
 
     if error_code in (400, 404):
-        return (flask.render_template('{}.html'.format(error_code), error_message=error_message), error_code)
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
 
     flask.abort(error_code)
 
@@ -110,7 +110,7 @@ def recordFindRequest():
         return json.dumps(record)
 
     if error_code in (400, 404):
-        return (flask.render_template('{}.html'.format(error_code), error_message=error_message), error_code)
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
 
     flask.abort(error_code)
 
@@ -121,7 +121,7 @@ def recordFindAllRequest():
         return json.dumps(allRecords)
 
     if error_code in (400, 404):
-        return (flask.render_template('{}.html'.format(error_code), error_message=error_message), error_code)
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
 
     flask.abort(error_code)
 
@@ -134,7 +134,7 @@ def recordMatching():
     os = request.args.get('os') # may generate BadRequest if not present
     if os not in SupportedOSChoices:
         return (None,
-            'unknown os "{}": should be one of {}'.format(os, SupportedOSChoices),
+            'unknown os "{0}": should be one of {1}'.format(os, SupportedOSChoices),
             400)
 
     offset = int(request.args.get('offset', '0'))
@@ -152,7 +152,7 @@ def recordMatching():
         modeName, value = modeDict.items()[0]
     else:
         return (None,
-            "invalid or ambiguous mode: should be one of {}".format(ModeChoices),
+            "invalid or ambiguous mode: should be one of {0}".format(ModeChoices),
             400)
 
     defaultStability = 'any' if modeName == 'revision' else 'release'
@@ -160,7 +160,7 @@ def recordMatching():
 
     if stability not in StabilityChoices:
         return (None,
-                "bad stability {}: should be one of {}".format(stability, StabilityChoices),
+                "bad stability {0}: should be one of {1}".format(stability, StabilityChoices),
                 400)
 
     r = getBestMatching(revisionRecords, os, stability, modeName, value, offset)
@@ -200,7 +200,7 @@ def recordsMatchingAllOSAndStability():
         modeName, value = modeDict.items()[0]
     else:
         return (None,
-            "invalid or ambiguous mode: should be one of {}".format(ModeChoices),
+            "invalid or ambiguous mode: should be one of {0}".format(ModeChoices),
             400)
 
     results = {}
@@ -217,7 +217,7 @@ InfoURLMethod='midas.slicerpackages.get.packages'
 InfoURLBase='http://slicer.kitware.com/midas3/api/json'
 
 def getMidasRecordsFromURL():
-    infoURL = '{}?method={}'.format(InfoURLBase, InfoURLMethod)
+    infoURL = '{0}?method={1}'.format(InfoURLBase, InfoURLMethod)
     info = None
     try:
         fp = urllib2.urlopen(infoURL)
@@ -314,7 +314,7 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
     elif mode == 'checkout-date':
         selectors.append(matchDate(modeArg, 'checkout-date'))
     else:
-        app.logger.error("unknown mode {}".format(mode))
+        app.logger.error("unknown mode {0}".format(mode))
         return None
 
     matcher = allPass(selectors)
