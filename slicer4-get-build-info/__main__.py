@@ -9,11 +9,10 @@ InfoURLBase='http://slicer.kitware.com/midas3/api/json'
 def getMidasRecordsFromURL():
     infoURL = '{}?method={}'.format(InfoURLBase, InfoURLMethod)
     info = None
-    try:
-        fp = urllib2.urlopen(infoURL)
-        info = fp.read()
-    finally:
-        fp.close()
+
+    fp = urllib2.urlopen(infoURL)
+    info = fp.read()
+    fp.close()
 
     return json.loads(info)['data']
 
@@ -26,7 +25,6 @@ def recordToDb(r):
             json.dumps(r)]
 
 def main(dbfile):
-    dbfile = sys.argv[1]
     records = getMidasRecordsFromURL()
     with sqlite3.connect(dbfile) as db:
         db.execute('''create table if not exists
@@ -42,5 +40,8 @@ def main(dbfile):
         db.commit()
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print >> sys.stderr, "usage is: %s <dbfile>" % sys.argv[0]
+        sys.exit(1)
     main(sys.argv[1])
 
