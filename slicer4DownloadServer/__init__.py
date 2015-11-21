@@ -296,6 +296,7 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
 
 # database handling methods
 def openDb():
+    app.logger.debug('opening db')
     dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
     if  not os.path.isfile(dbfile):
         app.logger.error('database file %s does not exist', dbfile)
@@ -307,8 +308,8 @@ def openDb():
 
 def getRecordsFromDb():
     try:
-        records = flask.g.midasRecords
-    except AttributeError:
+        records = flask.current_app.config["_MIDAS_RECORDS"]
+    except KeyError:
         records = None
 
     cursor = getDb().cursor()
@@ -316,26 +317,28 @@ def getRecordsFromDb():
     # get record count
     cursor.execute('select count(1) from _')
     count = int(cursor.fetchone()[0])
-    if records == None or count != len(records):
-        cursor.execute('select record from _ order by revision desc,build_date desc');
-        records = flask.g.midasRecords = [json.loads(r[0]) for r in cursor.fetchall()]
 
+    # load db if needed or count has changed
+    if records == None or count != len(records):
+        app.logger.debug('full query %s %s', records, count)
+        cursor.execute('select record from _ order by revision desc,build_date desc');
+        records = [json.loads(r[0]) for r in cursor.fetchall()]
+        flask.current_app.config["_MIDAS_RECORDS"] = records
+    else:
+        app.logger.debug('cached record')
     return records
 
 
 def getDb():
     try:
-        db = flask.g.db
-    except AttributeError:
-        db = flask.g.gb = openDb()
+        db = flask.current_app.config['_DB_HANDLE']
+    except KeyError:
+        db = flask.current_app.config['_DB_HANDLE'] = openDb()
     return db
 
 @app.teardown_appcontext
 def closeDb(error):
-    try:
-        flask.g.db.close()
-    except AttributeError:
-        pass
+    pass
 
 if __name__ == '__main__':
     app.run()
