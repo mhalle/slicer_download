@@ -15,64 +15,55 @@ ModeChoices = ('revision', 'closest-revision', 'version', 'checkout-date', 'date
 DownloadURLBase = 'http://slicer.kitware.com/midas3/download'
 LocalBitstreamPath = '/bitstream'
 
-def main(midasRecordFilename):
-    app = flask.Flask(__name__)
-    app.config.from_object('config')
-    midasRecordCache = MidasRecordCache(midasRecordFilename)
+app = flask.Flask(__name__)
+app.config.from_object('slicer4DownloadServer.config')
 
-    app.config['MIDAS_RECORD_CACHE'] = midasRecordCache
-
-    app.add_url_rule('/download', view_func=redirectToLocalBitstream)
-    app.add_url_rule('/findall', view_func=recordFindAllRequest)
-    app.add_url_rule('/find', view_func=recordFindRequest)
-    app.add_url_rule('/bitstream/<bitstreamId>', view_func=redirectToSourceBitstream)
-    app.add_url_rule('/', view_func=downloadPage)
-    app.run()
-
-class MidasRecordCache(object):
-    def __init__(self, filename):
-        self.filename = filename
-        self.mtime = None
-        self.data = None
-        self.update()
-
-    def update(self):
-        try:
-            stat = os.stat(self.filename)
-        except OSError:
-            # could be temporary lack of file
-            self.mtime = None
-
-        if self.mtime == stat.st_mtime:
-            return
-
-        with sqlite3.connect(self.filename) as db:
-            cursor = db.cursor()
-            cursor.execute('select record from _ order by revision desc,build_date desc');
-            self.data = [json.loads(r[0]) for r in cursor.fetchall()]
-
-        self.mtime = stat.st_mtime
-        return self.data
-
-    def get(self):
-        self.update()
-        return self.data
-
+@app.route('/')
 def downloadPage():
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
 
     return flask.render_template('download.html', R=allRecords)
 
-
-def getLocalBitstreamURL(r):
-    bitstreamId = r['bitstreams'][0]['bitstream_id']
-
-    downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
-    return downloadURL
-
+@app.route('/bitstream/<bitstreamId>')
 def redirectToSourceBitstream(bitstreamId):
     midasBitstreamURL = '{0}?bitstream={1}'.format(DownloadURLBase, bitstreamId)
     return flask.redirect(midasBitstreamURL)
+
+@app.route('/download')
+def redirectToLocalBitstream():
+    record, error_message, error_code = recordMatching()
+
+    if record:
+        return flask.redirect(record['download_url'])
+
+    if error_code in (400, 404):
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
+
+    flask.abort(error_code)
+
+@app.route('/find')
+def recordFindRequest():
+    record, error_message, error_code = recordMatching()
+
+    if record:
+        return json.dumps(record)
+
+    if error_code in (400, 404):
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
+
+    flask.abort(error_code)
+
+@app.route('/findall')
+def recordFindAllRequest():
+    allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
+
+    if allRecords:
+        return json.dumps(allRecords)
+
+    if error_code in (400, 404):
+        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
+
+    flask.abort(error_code)
 
 def cleanupMidasRecord(r):
     if not r: return None
@@ -92,44 +83,17 @@ def cleanupMidasRecord(r):
     d['download_url'] = getLocalBitstreamURL(r)
     return d
 
-def redirectToLocalBitstream():
-    record, error_message, error_code = recordMatching()
+def getLocalBitstreamURL(r):
+    bitstreamId = r['bitstreams'][0]['bitstream_id']
 
-    if record:
-        return flask.redirect(record['download_url'])
-
-    if error_code in (400, 404):
-        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
-
-    flask.abort(error_code)
-
-def recordFindRequest():
-    record, error_message, error_code = recordMatching()
-
-    if record:
-        return json.dumps(record)
-
-    if error_code in (400, 404):
-        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
-
-    flask.abort(error_code)
-
-def recordFindAllRequest():
-    allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
-
-    if allRecords:
-        return json.dumps(allRecords)
-
-    if error_code in (400, 404):
-        return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
-
-    flask.abort(error_code)
+    downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
+    return downloadURL
 
 def recordMatching():
     request = flask.request
     app = flask.current_app
     logger = app.logger
-    revisionRecords = app.config['MIDAS_RECORD_CACHE'].get()
+    revisionRecords = getRecordsFromDb()
 
     os = request.args.get('os') # may generate BadRequest if not present
     if os not in SupportedOSChoices:
@@ -176,7 +140,7 @@ def recordsMatchingAllOSAndStability():
     request = flask.request
     app = flask.current_app
     logger = app.logger
-    revisionRecords = app.config['MIDAS_RECORD_CACHE'].get()
+    revisionRecords = getRecordsFromDb()
 
     modeDict = {}
     for name in ModeChoices:
@@ -213,24 +177,6 @@ def recordsMatchingAllOSAndStability():
 
     return (results, None, 200)
 
-InfoURLMethod='midas.slicerpackages.get.packages'
-InfoURLBase='http://slicer.kitware.com/midas3/api/json'
-
-def getMidasRecordsFromURL():
-    infoURL = '{0}?method={1}'.format(InfoURLBase, InfoURLMethod)
-    info = None
-    try:
-        fp = urllib2.urlopen(infoURL)
-        info = fp.read()
-    finally:
-        fp.close()
-
-    return json.loads(info)['data']
-
-
-def getMidasRecords(filename):
-    with open(filename) as fp:
-        return json.load(fp)['data']
 
 def matchOS(os):
     return lambda r: r['os'] == os
@@ -296,7 +242,6 @@ def allPass(predlist):
         return True
     return pred
 
-
 def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
     osRecords = filter(matchOS(os), revisionRecords)
 
@@ -349,10 +294,34 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
     return matchingRecord
 
 
+# database handling methods
+def openDb():
+    dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
+    rv = sqlite3.connect(dbfile)
+    # rv.row_factory = sqlite3.Row
+    return rv
+
+def getRecordsFromDb():
+    cursor = getDb().cursor()
+    cursor.execute('select record from _ order by revision desc,build_date desc');
+    return [json.loads(r[0]) for r in cursor.fetchall()]
+
+def getDb():
+    try:
+        db = flask.g.db
+    except AttributeError:
+        db = flask.g.gb = openDb()
+    return db
+
+@app.teardown_appcontext
+def closeDb(error):
+    try:
+        flask.g.db.close()
+    except AttributeError:
+        pass
+
 if __name__ == '__main__':
-    main(sys.argv[1])
-
-
+    app.run()
 
 
 # class ZZ(object):
