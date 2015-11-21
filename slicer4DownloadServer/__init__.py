@@ -297,8 +297,12 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
 # database handling methods
 def openDb():
     dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
+    if  not os.path.isfile(dbfile):
+        app.logger.error('database file %s does not exist', dbfile)
+        raise IOError(2, 'No such file or directory', dbfile)
+
     rv = sqlite3.connect(dbfile)
-    # rv.row_factory = sqlite3.Row
+    rv.row_factory = sqlite3.Row
     return rv
 
 def getRecordsFromDb():
