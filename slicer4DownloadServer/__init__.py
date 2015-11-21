@@ -306,9 +306,22 @@ def openDb():
     return rv
 
 def getRecordsFromDb():
+    try:
+        records = flask.g.midasRecords
+    except AttributeError:
+        records = None
+
     cursor = getDb().cursor()
-    cursor.execute('select record from _ order by revision desc,build_date desc');
-    return [json.loads(r[0]) for r in cursor.fetchall()]
+
+    # get record count
+    cursor.execute('select count(1) from _')
+    count = int(cursor.fetchone()[0])
+    if records == None or count != len(records):
+        cursor.execute('select record from _ order by revision desc,build_date desc');
+        records = flask.g.midasRecords = [json.loads(r[0]) for r in cursor.fetchall()]
+
+    return records
+
 
 def getDb():
     try:
