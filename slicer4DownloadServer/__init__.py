@@ -296,7 +296,6 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
 
 # database handling methods
 def openDb():
-    app.logger.debug('opening db')
     dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
     if  not os.path.isfile(dbfile):
         app.logger.error('database file %s does not exist', dbfile)
@@ -320,7 +319,6 @@ def getRecordsFromDb():
 
     # load db if needed or count has changed
     if records == None or count != len(records):
-        app.logger.debug('full query %s %s', records, count)
         cursor.execute('select record from _ order by revision desc,build_date desc');
         records = [json.loads(r[0]) for r in cursor.fetchall()]
         flask.current_app.config["_MIDAS_RECORDS"] = records
