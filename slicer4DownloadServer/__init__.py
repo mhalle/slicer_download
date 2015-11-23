@@ -217,7 +217,9 @@ def matchVersion(version):
         return True
     return match
 
-VersionRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-20\d\d')
+# this looks ugly because we need to be able to accept versions like:
+# 4.5.0, 4.5.0-1, 4.5.0-rc2, 4.5.0-gamma, and so forth
+VersionRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(20\d\d|macosx|linux|win+)')
 
 def getVersion(record):
     if record['release']: return record['release']
