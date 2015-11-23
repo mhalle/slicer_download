@@ -17,6 +17,7 @@ LocalBitstreamPath = '/bitstream'
 
 app = flask.Flask(__name__)
 app.config.from_object('slicer4DownloadServer.config')
+app.config.from_envvar('SLICER4_DOWNLOAD_SERVER_CONF')
 
 @app.route('/')
 def downloadPage():
