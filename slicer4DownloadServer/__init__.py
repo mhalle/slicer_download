@@ -17,7 +17,11 @@ LocalBitstreamPath = '/bitstream'
 
 app = flask.Flask(__name__)
 app.config.from_object('slicer4DownloadServer.config')
-app.config.from_envvar('SLICER4_DOWNLOAD_SERVER_CONF')
+try:
+    app.config.from_envvar('SLICER4_DOWNLOAD_SERVER_CONF')
+except RuntimeError:
+    # environment variable may not exist
+    pass
 
 @app.route('/')
 def downloadPage():
