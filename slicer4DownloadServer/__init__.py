@@ -71,6 +71,8 @@ def recordFindAllRequest():
     flask.abort(error_code)
 
 def cleanupMidasRecord(r):
+    """Convert a raw MIDAS record into something a little bit more useful, 
+    including new fields and more consistent names."""
     if not r: return None
     d = {}
     for field in ('arch', 'revision', 'os', 'codebase', 'name', 'package'):
@@ -89,12 +91,15 @@ def cleanupMidasRecord(r):
     return d
 
 def getLocalBitstreamURL(r):
+    """Given a record, return the URL of the local bitstream
+    (e.g., http://download.slicer.org/bitstream/XXXXX )"""
     bitstreamId = r['bitstreams'][0]['bitstream_id']
 
     downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
     return downloadURL
 
 def recordMatching():
+    """High level function for getting all records matching specific criteria including OS."""
     request = flask.request
     app = flask.current_app
     logger = app.logger
@@ -142,6 +147,9 @@ def recordMatching():
     return (c, None, 200)
 
 def recordsMatchingAllOSAndStability():
+    """High level function returning all records matching search criteria, 
+    for all OS and stability choices."""
+
     request = flask.request
     app = flask.current_app
     logger = app.logger
@@ -183,6 +191,7 @@ def recordsMatchingAllOSAndStability():
     return (results, None, 200)
 
 
+# query matching functions
 def matchOS(os):
     return lambda r: r['os'] == os
 
@@ -221,6 +230,16 @@ def matchVersion(version):
         return True
     return match
 
+def matchStability(s):
+    if s == 'nightly':
+        return lambda r: r['submissiontype'] == 'nightly'
+    if s =='release':
+        return lambda r: r['release'] != ""
+
+    return lambda r: True
+
+# composite field getters
+
 # this looks ugly because we need to be able to accept versions like:
 # 4.5.0, 4.5.0-1, 4.5.0-rc2, 4.5.0-gamma, and so forth
 
@@ -235,18 +254,12 @@ def getVersion(record):
     if not m: return None
     return m.group(1)
 
-def matchStability(s):
-    if s == 'nightly':
-        return lambda r: r['submissiontype'] == 'nightly'
-    if s =='release':
-        return lambda r: r['release'] != ""
-
-    return lambda r: True
-
 def getBitstreamInfo(r):
     return r['bitstreams'][0]
 
 def allPass(predlist):
+    """returns a function that evaluates each predicate in a list given an argument, 
+    and returns True if all pass, otherwise False."""
     def pred(x):
         for p in predlist:
             if not p(x): return False
