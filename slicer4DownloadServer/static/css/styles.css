@@ -108,6 +108,12 @@ a:hover {
 
 }
 
+.table-subheader {
+    font-weight:normal;
+    font-size: 90%;
+    font-style: oblique;
+}
+
 a.button:hover {
       text-decoration: none;
   
