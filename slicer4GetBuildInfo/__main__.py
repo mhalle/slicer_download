@@ -3,12 +3,12 @@ import urllib2
 import sqlite3
 import json
 
-InfoURLMethod='midas.slicerpackages.get.packages'
-InfoURLBase='http://slicer.kitware.com/midas3/api/json'
+InfoURLMethod = 'midas.slicerpackages.get.packages'
+InfoURLBase = 'http://slicer.kitware.com/midas3/api/json'
+
 
 def getMidasRecordsFromURL():
     infoURL = '{0}?method={1}'.format(InfoURLBase, InfoURLMethod)
-    info = None
 
     fp = urllib2.urlopen(infoURL)
     info = fp.read()
@@ -23,6 +23,7 @@ def recordToDb(r):
             r['checkoutdate'],
             r['date_creation'],
             json.dumps(r)]
+
 
 def main(dbfile):
     records = getMidasRecordsFromURL()
@@ -44,4 +45,3 @@ if __name__ == '__main__':
         print >> sys.stderr, "usage is: %s <dbfile>" % sys.argv[0]
         sys.exit(1)
     main(sys.argv[1])
-
