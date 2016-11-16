@@ -10,7 +10,8 @@ import sqlite3
 
 SupportedOSChoices = ('macosx', 'win', 'linux')
 StabilityChoices = ('release', 'nightly', 'any')
-ModeChoices = ('revision', 'closest-revision', 'version', 'checkout-date', 'date')
+ModeChoices = ('revision', 'closest-revision',
+               'version', 'checkout-date', 'date')
 
 DownloadURLBase = 'http://slicer.kitware.com/midas3/download'
 LocalBitstreamPath = '/bitstream'
@@ -23,16 +24,20 @@ except RuntimeError:
     # environment variable may not exist
     pass
 
+
 @app.route('/')
 def downloadPage():
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
 
     return flask.render_template('download.html', R=allRecords)
 
+
 @app.route('/bitstream/<bitstreamId>')
 def redirectToSourceBitstream(bitstreamId):
-    midasBitstreamURL = '{0}?bitstream={1}'.format(DownloadURLBase, bitstreamId)
+    midasBitstreamURL = '{0}?bitstream={1}'.format(
+        DownloadURLBase, bitstreamId)
     return flask.redirect(midasBitstreamURL)
+
 
 @app.route('/download')
 def redirectToLocalBitstream():
@@ -46,6 +51,7 @@ def redirectToLocalBitstream():
 
     flask.abort(error_code)
 
+
 @app.route('/find')
 def recordFindRequest():
     record, error_message, error_code = recordMatching()
@@ -57,6 +63,7 @@ def recordFindRequest():
         return (flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code)
 
     flask.abort(error_code)
+
 
 @app.route('/findall')
 def recordFindAllRequest():
@@ -70,10 +77,12 @@ def recordFindAllRequest():
 
     flask.abort(error_code)
 
+
 def cleanupMidasRecord(r):
     """Convert a raw MIDAS record into something a little bit more useful, 
     including new fields and more consistent names."""
-    if not r: return None
+    if not r:
+        return None
     d = {}
     for field in ('arch', 'revision', 'os', 'codebase', 'name', 'package'):
         d[field] = r[field]
@@ -90,6 +99,7 @@ def cleanupMidasRecord(r):
     d['download_url'] = getLocalBitstreamURL(r)
     return d
 
+
 def getLocalBitstreamURL(r):
     """Given a record, return the URL of the local bitstream
     (e.g., http://download.slicer.org/bitstream/XXXXX )"""
@@ -98,6 +108,7 @@ def getLocalBitstreamURL(r):
     downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
     return downloadURL
 
+
 def recordMatching():
     """High level function for getting all records matching specific criteria including OS."""
     request = flask.request
@@ -105,11 +116,12 @@ def recordMatching():
     logger = app.logger
     revisionRecords = getRecordsFromDb()
 
-    os = request.args.get('os') # may generate BadRequest if not present
+    os = request.args.get('os')  # may generate BadRequest if not present
     if os not in SupportedOSChoices:
         return (None,
-            'unknown os "{0}": should be one of {1}'.format(os, SupportedOSChoices),
-            400)
+                'unknown os "{0}": should be one of {1}'.format(
+                    os, SupportedOSChoices),
+                400)
 
     offset = int(request.args.get('offset', '0'))
 
@@ -126,25 +138,29 @@ def recordMatching():
         modeName, value = modeDict.items()[0]
     else:
         return (None,
-            "invalid or ambiguous mode: should be one of {0}".format(ModeChoices),
-            400)
+                "invalid or ambiguous mode: should be one of {0}".format(
+                    ModeChoices),
+                400)
 
     defaultStability = 'any' if modeName == 'revision' else 'release'
     stability = request.args.get('stability', defaultStability)
 
     if stability not in StabilityChoices:
         return (None,
-                "bad stability {0}: should be one of {1}".format(stability, StabilityChoices),
+                "bad stability {0}: should be one of {1}".format(
+                    stability, StabilityChoices),
                 400)
 
-    r = getBestMatching(revisionRecords, os, stability, modeName, value, offset)
+    r = getBestMatching(revisionRecords, os, stability,
+                        modeName, value, offset)
     c = cleanupMidasRecord(r)
 
     if not c:
         return (None,
-            "no matching revision for given parameters",
-            404)
+                "no matching revision for given parameters",
+                404)
     return (c, None, 200)
+
 
 def recordsMatchingAllOSAndStability():
     """High level function returning all records matching search criteria, 
@@ -161,7 +177,6 @@ def recordsMatchingAllOSAndStability():
         if value != None:
             modeDict[name] = value
 
-
     offset = int(request.args.get('offset', '0'))
 
     modeDict = {}
@@ -177,14 +192,16 @@ def recordsMatchingAllOSAndStability():
         modeName, value = modeDict.items()[0]
     else:
         return (None,
-            "invalid or ambiguous mode: should be one of {0}".format(ModeChoices),
-            400)
+                "invalid or ambiguous mode: should be one of {0}".format(
+                    ModeChoices),
+                400)
 
     results = {}
     for os in SupportedOSChoices:
         osResult = {}
         for stability in ('release', 'nightly'):
-            r = getBestMatching(revisionRecords, os, stability, modeName, value, offset)
+            r = getBestMatching(revisionRecords, os,
+                                stability, modeName, value, offset)
             osResult[stability] = cleanupMidasRecord(r)
         results[os] = osResult
 
@@ -195,15 +212,18 @@ def recordsMatchingAllOSAndStability():
 def matchOS(os):
     return lambda r: r['os'] == os
 
+
 def matchExactRevision(rev):
     def match(r):
         return int(rev) == int(r['revision'])
     return match
 
+
 def matchClosestRevision(rev):
     def match(r):
         return int(rev) >= int(r['revision'])
     return match
+
 
 def matchDate(dt, dateType):
     def match(r):
@@ -213,15 +233,17 @@ def matchDate(dt, dateType):
             dateString = r['checkoutdate']
         if not dateString:
             return False
-        justDateString = dateString.split(' ')[0] #drop time
+        justDateString = dateString.split(' ')[0]  # drop time
         return dt >= justDateString
 
     return match
 
+
 def matchVersion(version):
     def match(r):
         rv = getVersion(r)
-        if not rv: return False
+        if not rv:
+            return False
         rvs = rv.split('.')
         vs = version.split('.')
         for i in range(0, len(vs)):
@@ -230,10 +252,11 @@ def matchVersion(version):
         return True
     return match
 
+
 def matchStability(s):
     if s == 'nightly':
         return lambda r: r['submissiontype'] == 'nightly'
-    if s =='release':
+    if s == 'release':
         return lambda r: r['release'] != ""
 
     return lambda r: True
@@ -246,25 +269,32 @@ def matchStability(s):
 VersionWithDateRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(\d{4}-\d{2}-\d{2})')
 VersionRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(macosx|linux|win+)')
 
+
 def getVersion(record):
-    if record['release']: return record['release']
+    if record['release']:
+        return record['release']
     m = VersionWithDateRE.match(record['name'])
     if not m:
         m = VersionRE.match(record['name'])
-    if not m: return None
+    if not m:
+        return None
     return m.group(1)
+
 
 def getBitstreamInfo(r):
     return r['bitstreams'][0]
+
 
 def allPass(predlist):
     """returns a function that evaluates each predicate in a list given an argument, 
     and returns True if all pass, otherwise False."""
     def pred(x):
         for p in predlist:
-            if not p(x): return False
+            if not p(x):
+                return False
         return True
     return pred
+
 
 def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
     osRecords = filter(matchOS(os), revisionRecords)
@@ -289,29 +319,32 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
     matcher = allPass(selectors)
 
     matchingRecordIndex = -1
-    for  i, r in enumerate(osRecords):
+    for i, r in enumerate(osRecords):
         if matcher(r):
             matchingRecordIndex = i
             break
 
-    if matchingRecordIndex  == -1:
+    if matchingRecordIndex == -1:
         matchingRecord = None
     else:
         if offset < 0:
-            #an offset < 0 looks backward in time, or forward in the list
-            g = groupby(osRecords[matchingRecordIndex:], key=lambda r: int(r['revision']))
+            # an offset < 0 looks backward in time, or forward in the list
+            g = groupby(osRecords[matchingRecordIndex:],
+                        key=lambda r: int(r['revision']))
             try:
-                o = islice(g, -offset, -offset+1).next()
-                matchingRecord =  list(o[1])[0]
-            except StopIteration: # no match or stepped off the end of the list
-                    matchingRecord = None
+                o = islice(g, -offset, -offset + 1).next()
+                matchingRecord = list(o[1])[0]
+            except StopIteration:  # no match or stepped off the end of the list
+                matchingRecord = None
         elif offset > 0:
-            #look forward in time for the latest build of a particular rev, so flip list
-            g = groupby(osRecords[matchingRecordIndex:0:-1], key=lambda r: int(r['revision']))
+            # look forward in time for the latest build of a particular rev, so
+            # flip list
+            g = groupby(osRecords[matchingRecordIndex:0:-1],
+                        key=lambda r: int(r['revision']))
             try:
-                o = islice(g, offset, offset+1).next()
-                matchingRecord =  list(o[1])[-1]
-            except StopIteration: # no match of stepped off the end of the list
+                o = islice(g, offset, offset + 1).next()
+                matchingRecord = list(o[1])[-1]
+            except StopIteration:  # no match of stepped off the end of the list
                 matchingRecord = None
         else:
             matchingRecord = osRecords[matchingRecordIndex]
@@ -321,13 +354,14 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
 # database handling methods
 def openDb():
     dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
-    if  not os.path.isfile(dbfile):
+    if not os.path.isfile(dbfile):
         app.logger.error('database file %s does not exist', dbfile)
         raise IOError(2, 'No such file or directory', dbfile)
 
     rv = sqlite3.connect(dbfile)
     rv.row_factory = sqlite3.Row
     return rv
+
 
 def getRecordsFromDb():
     try:
@@ -343,7 +377,8 @@ def getRecordsFromDb():
 
     # load db if needed or count has changed
     if records == None or count != len(records):
-        cursor.execute('select record from _ order by revision desc,build_date desc');
+        cursor.execute(
+            'select record from _ order by revision desc,build_date desc')
         records = [json.loads(r[0]) for r in cursor.fetchall()]
         flask.current_app.config["_MIDAS_RECORDS"] = records
     return records
@@ -355,6 +390,7 @@ def getDb():
     except KeyError:
         db = flask.current_app.config['_DB_HANDLE'] = openDb()
     return db
+
 
 @app.teardown_appcontext
 def closeDb(error):
