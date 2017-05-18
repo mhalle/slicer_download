@@ -8,7 +8,8 @@ InfoURLBase = 'http://slicer.kitware.com/midas3/api/json'
 
 
 def getMidasRecordsFromURL():
-    infoURL = '{0}?method={1}'.format(InfoURLBase, InfoURLMethod)
+    infoURL = '{0}?productname=Slicer&method={1}'.format(InfoURLBase, InfoURLMethod)
+
     info = None
 
     fp = urllib2.urlopen(infoURL)
@@ -19,11 +20,14 @@ def getMidasRecordsFromURL():
 
 
 def recordToDb(r):
-    return [int(r['item_id']),
-            int(r['revision']),
-            r['checkoutdate'],
-            r['date_creation'],
-            json.dumps(r)]
+    try:
+        return [int(r['item_id']),
+                int(r['revision']),
+                r['checkoutdate'],
+                r['date_creation'],
+                json.dumps(r)]
+    except ValueError:
+        return None
 
 
 def main(dbfile):
@@ -40,7 +44,7 @@ def main(dbfile):
         cursor.executemany('''insert or ignore into _
             (item_id, revision, checkout_date, build_date, record)
             values(?,?,?,?,?)''',
-            (recordToDb(r) for r in records))
+                           filter(None, (recordToDb(r) for r in records)))
         db.commit()
 
 if __name__ == '__main__':
