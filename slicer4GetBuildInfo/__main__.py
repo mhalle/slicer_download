@@ -1,5 +1,5 @@
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import sqlite3
 import json
 
@@ -12,7 +12,7 @@ def getMidasRecordsFromURL():
 
     info = None
 
-    fp = urllib2.urlopen(infoURL)
+    fp = urllib.request.urlopen(infoURL)
     info = fp.read()
     fp.close()
 
@@ -44,11 +44,11 @@ def main(dbfile):
         cursor.executemany('''insert or ignore into _
             (item_id, revision, checkout_date, build_date, record)
             values(?,?,?,?,?)''',
-                           filter(None, (recordToDb(r) for r in records)))
+                           [_f for _f in (recordToDb(r) for r in records) if _f])
         db.commit()
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print >> sys.stderr, "usage is: %s <dbfile>" % sys.argv[0]
+        print("usage is: %s <dbfile>" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     main(sys.argv[1])

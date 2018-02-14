@@ -4,7 +4,7 @@ from flask import json
 import sys
 import re
 from itertools import groupby, islice
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import os
 import sqlite3
 
@@ -131,11 +131,12 @@ def recordMatching():
         if value != None:
             modeDict[name] = value
 
-    if len(modeDict.keys()) == 0:
+    
+    if len(list(modeDict.keys())) == 0:
         modeName = 'date'
         value = '9999-12-31'  # distant date to force last record
-    elif len(modeDict.keys()) == 1:
-        modeName, value = modeDict.items()[0]
+    elif len(list(modeDict.keys())) == 1:
+        modeName, value = list(modeDict.items())[0]
     else:
         return (None,
                 "invalid or ambiguous mode: should be one of {0}".format(
@@ -185,11 +186,11 @@ def recordsMatchingAllOSAndStability():
         if value != None:
             modeDict[name] = value
 
-    if len(modeDict.keys()) == 0:
+    if len(list(modeDict.keys())) == 0:
         modeName = 'date'
         value = '9999-12-31'  # distant date to force last record
-    elif len(modeDict.keys()) == 1:
-        modeName, value = modeDict.items()[0]
+    elif len(list(modeDict.keys())) == 1:
+        modeName, value = list(modeDict.items())[0]
     else:
         return (None,
                 "invalid or ambiguous mode: should be one of {0}".format(
@@ -297,7 +298,7 @@ def allPass(predlist):
 
 
 def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
-    osRecords = filter(matchOS(os), revisionRecords)
+    osRecords = list(filter(matchOS(os), revisionRecords))
 
     selectors = [matchStability(stability)]
 
@@ -332,7 +333,7 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
             g = groupby(osRecords[matchingRecordIndex:],
                         key=lambda r: int(r['revision']))
             try:
-                o = islice(g, -offset, -offset + 1).next()
+                o = next(islice(g, -offset, -offset + 1))
                 matchingRecord = list(o[1])[0]
             except StopIteration:  # no match or stepped off the end of the list
                 matchingRecord = None
@@ -342,7 +343,7 @@ def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
             g = groupby(osRecords[matchingRecordIndex:0:-1],
                         key=lambda r: int(r['revision']))
             try:
-                o = islice(g, offset, offset + 1).next()
+                o = next(islice(g, offset, offset + 1))
                 matchingRecord = list(o[1])[-1]
             except StopIteration:  # no match of stepped off the end of the list
                 matchingRecord = None
