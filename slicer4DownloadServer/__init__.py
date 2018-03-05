@@ -370,7 +370,8 @@ def getRecordsFromDb():
     except KeyError:
         records = None
 
-    cursor = getDb().cursor()
+    cursor = db = getDb()
+     
 
     # get record count
     cursor.execute('select count(1) from _')
@@ -382,14 +383,13 @@ def getRecordsFromDb():
             'select record from _ order by revision desc,build_date desc')
         records = [json.loads(r[0]) for r in cursor.fetchall()]
         flask.current_app.config["_MIDAS_RECORDS"] = records
+    db.close()
+
     return records
 
 
 def getDb():
-    try:
-        db = flask.current_app.config['_DB_HANDLE']
-    except KeyError:
-        db = flask.current_app.config['_DB_HANDLE'] = openDb()
+    db = openDb()
     return db
 
 
