@@ -370,8 +370,8 @@ def getRecordsFromDb():
     except KeyError:
         records = None
 
-    cursor = db = getDb()
-     
+    db = getDb()
+    cursor = db.cursor()
 
     # get record count
     cursor.execute('select count(1) from _')
