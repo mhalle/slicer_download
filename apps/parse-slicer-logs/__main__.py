@@ -18,7 +18,7 @@ if __name__ == '__main__':
     argparser.add_argument('--db', required=True, help="sqlite stats database")
     argparser.add_argument('--geoip', required=True, help="geoip data file")
     argparser.add_argument('--statsdata', required=True, help="slicer stats output")
-    argparser.add_argument('--nomidas', action='store_true')
+    argparser.add_argument('--nomidas', action='store_true', help="don't download midas data")
     argparser.add_argument('filenames', nargs="*")
     args = argparser.parse_args()
     dbname = args.db
