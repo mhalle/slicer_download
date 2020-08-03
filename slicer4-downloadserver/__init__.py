@@ -13,7 +13,7 @@ StabilityChoices = ('release', 'nightly', 'any')
 ModeChoices = ('revision', 'closest-revision',
                'version', 'checkout-date', 'date')
 
-DownloadURLBase = 'http://slicer.kitware.com/midas3/download'
+DownloadURLBase = 'https://slicer.kitware.com/midas3/download'
 LocalBitstreamPath = '/bitstream'
 
 app = flask.Flask(__name__)
@@ -102,7 +102,7 @@ def cleanupMidasRecord(r):
 
 def getLocalBitstreamURL(r):
     """Given a record, return the URL of the local bitstream
-    (e.g., http://download.slicer.org/bitstream/XXXXX )"""
+    (e.g., https://download.slicer.org/bitstream/XXXXX )"""
     bitstreamId = r['bitstreams'][0]['bitstream_id']
 
     downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
