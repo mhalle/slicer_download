@@ -1,1 +1,25 @@
-flask
+aiohttp==3.7.3
+apache-log-parser==1.7.0
+async-timeout==3.0.1
+attrs==20.3.0
+certifi==2020.12.5
+chardet==3.0.4
+click==7.1.2
+Flask==1.1.2
+geoip2==4.1.0
+idna==2.10
+idna-ssl==1.1.0
+itsdangerous==1.1.0
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+maxminddb==2.0.3
+multidict==5.1.0
+requests==2.25.0
+six==1.15.0
+typing-extensions==3.7.4.3
+ua-parser==0.10.0
+urllib3==1.26.2
+user-agents==2.2.0
+uWSGI @ https://projects.unbit.it/downloads/uwsgi-lts.tar.gz
+Werkzeug==1.0.1
+yarl==1.6.3

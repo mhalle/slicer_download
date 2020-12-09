@@ -1,0 +1,2 @@
+#!/bin/bash
+kill -9 `cat $HOME/apps/slicer_download/tmp/slicer_download.pid`

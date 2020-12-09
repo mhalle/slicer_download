@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PIDFILE="$HOME/apps/slicer_download/tmp/slicer_download.pid"
+if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
+                           grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
+/home/slicer/apps/slicer_download/env/bin/uwsgi --stop /home/slicer/apps/slicer_download/tmp/slicer_download.pid
+rm  /home/slicer/apps/slicer_download/tmp/slicer_download.pid
+  exit 99
+fi
+echo "No PID file"

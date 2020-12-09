@@ -1,0 +1,10 @@
+#!/bin/bash
+PIDFILE="$HOME/apps/slicer_download/tmp/slicer_download.pid"
+if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
+                           grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
+  echo "Already running."
+  exit 99
+fi
+echo -n 'Started at '
+date "+%Y-%m-%d %H:%M:%S"
+/home/slicer/apps/slicer_download/env/bin/uwsgi --ini /home/slicer/apps/slicer_download/etc/uwsgi.ini
