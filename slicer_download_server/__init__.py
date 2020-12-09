@@ -17,9 +17,9 @@ DownloadURLBase = 'https://slicer.kitware.com/midas3/download'
 LocalBitstreamPath = '/bitstream'
 
 app = flask.Flask(__name__)
-app.config.from_object('slicer4DownloadServer.config')
+app.config.from_object('slicer_download_server.config')
 try:
-    app.config.from_envvar('SLICER4_DOWNLOAD_SERVER_CONF')
+    app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
 except RuntimeError:
     # environment variable may not exist
     pass
