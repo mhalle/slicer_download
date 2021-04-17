@@ -17,7 +17,7 @@ DownloadURLBase = 'https://slicer.kitware.com/midas3/download'
 LocalBitstreamPath = '/bitstream'
 
 app = flask.Flask(__name__)
-app.config.from_object('slicer_download_server.config')
+# app.config.from_object('slicer_download_server.config')
 try:
     app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
 except RuntimeError:
