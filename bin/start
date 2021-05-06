@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDFILE="$HOME/apps/slicer_download/tmp/slicer_download.pid"
+PIDFILE="${HOME}/apps/slicer_download/tmp/slicer_download.pid"
 if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
                            grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
   echo "Already running."
@@ -7,5 +7,5 @@ if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
 fi
 echo -n 'Started at '
 date "+%Y-%m-%d %H:%M:%S"
-export SLICER_DOWNLOAD_SERVER_CONF="/home/slicer/apps/slicer_download/etc/conf/config.py"
-/home/slicer/apps/slicer_download/env/bin/uwsgi --ini /home/slicer/apps/slicer_download/etc/uwsgi.ini
+export SLICER_DOWNLOAD_SERVER_CONF="${HOME}/apps/slicer_download/etc/conf/config.py"
+${HOME}/apps/slicer_download/env/bin/uwsgi --ini ${HOME}/apps/slicer_download/etc/uwsgi.ini
