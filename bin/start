@@ -1,11 +1,37 @@
 #!/bin/bash
-PIDFILE="${HOME}/apps/slicer_download/tmp/slicer_download.pid"
+
+script_dir=$(cd $(dirname $0) || exit 1; pwd)
+
+ROOT_DIR=$(realpath "${script_dir}/..")
+LOG_DIR=$(realpath "${ROOT_DIR}/../logs/apps/slicer_download")
+TMP_DIR=$(realpath "${ROOT_DIR}/tmp")
+VIRTUALENV_DIR=$(realpath "${ROOT_DIR}/env")
+
+mkdir -p ${LOG_DIR}
+mkdir -p ${TMP_DIR}
+
+PIDFILE="${TMP_DIR}/slicer_download.pid"
+
 if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
                            grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
   echo "Already running."
   exit 99
 fi
-echo -n 'Started at '
+
+echo -n '[slicer_download] Started at '
 date "+%Y-%m-%d %H:%M:%S"
-export SLICER_DOWNLOAD_SERVER_CONF="${HOME}/apps/slicer_download/etc/conf/config.py"
-${HOME}/apps/slicer_download/env/bin/uwsgi --ini ${HOME}/apps/slicer_download/etc/uwsgi.ini
+export SLICER_DOWNLOAD_SERVER_CONF="${ROOT_DIR}/etc/conf/config.py"
+${VIRTUALENV_DIR}/bin/uwsgi \
+  --ini ${ROOT_DIR}/etc/uwsgi.ini \
+  --set-placeholder root_dir=${ROOT_DIR} \
+  --set-placeholder log_dir=${LOG_DIR} \
+  --set-placeholder tmp_dir=${TMP_DIR} \
+  --set-placeholder virtualenv_dir=${VIRTUALENV_DIR}
+
+echo
+echo "[slicer_download] Using these directories"
+echo "  ROOT_DIR       : ${ROOT_DIR}"
+echo "  LOG_DIR        : ${LOG_DIR}"
+echo "  TMP_DIR        : ${TMP_DIR}"
+echo "  VIRTUALENV_DIR : ${VIRTUALENV_DIR}"
+echo "  PIDFILE        : ${PIDFILE}"
