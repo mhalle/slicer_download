@@ -1,10 +1,18 @@
 #!/bin/bash
 
-PIDFILE="${HOME}/apps/slicer_download/tmp/slicer_download.pid"
+script_dir=$(cd $(dirname $0) || exit 1; pwd)
+
+ROOT_DIR=$(realpath "${script_dir}/..")
+TMP_DIR=$(realpath "${ROOT_DIR}/tmp")
+VIRTUALENV_DIR=$(realpath "${ROOT_DIR}/env")
+
+PIDFILE="${TMP_DIR}/slicer_download.pid"
+
 if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
                            grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
-${HOME}/apps/slicer_download/env/bin/uwsgi --stop ${PIDFILE}
-rm  ${PIDFILE}
+  ${VIRTUALENV_DIR}/bin/uwsgi --stop ${PIDFILE}
+  rm  ${PIDFILE}
   exit 99
 fi
+
 echo "No PID file"
