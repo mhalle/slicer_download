@@ -18,15 +18,25 @@ if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
   exit 99
 fi
 
+export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
+
+if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
+  echo "SLICER_DOWNLOAD_SERVER_CONF set to an nonexistent file: ${SLICER_DOWNLOAD_SERVER_CONF}"
+  exit 99
+fi
+
 echo -n '[slicer_download] Started at '
 date "+%Y-%m-%d %H:%M:%S"
-export SLICER_DOWNLOAD_SERVER_CONF="${ROOT_DIR}/etc/conf/config.py"
 ${VIRTUALENV_DIR}/bin/uwsgi \
   --ini ${ROOT_DIR}/etc/uwsgi.ini \
   --set-placeholder root_dir=${ROOT_DIR} \
   --set-placeholder log_dir=${LOG_DIR} \
   --set-placeholder tmp_dir=${TMP_DIR} \
   --set-placeholder virtualenv_dir=${VIRTUALENV_DIR}
+
+echo
+echo "[slicer_download] Using this config"
+echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
 
 echo
 echo "[slicer_download] Using these directories"
