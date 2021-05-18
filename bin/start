@@ -5,9 +5,9 @@ set -e
 script_dir=$(cd $(dirname $0) || exit 1; pwd)
 
 ROOT_DIR=$(realpath "${script_dir}/..")
-LOG_DIR=$(realpath "${ROOT_DIR}/../logs/apps/slicer_download")
-TMP_DIR=$(realpath "${ROOT_DIR}/tmp")
-VIRTUALENV_DIR=$(realpath "${ROOT_DIR}/env")
+LOG_DIR=$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")
+TMP_DIR=$(realpath -m "${ROOT_DIR}/tmp")
+VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
 
 mkdir -p ${LOG_DIR}
 mkdir -p ${TMP_DIR}
