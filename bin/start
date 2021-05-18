@@ -8,6 +8,7 @@ ROOT_DIR=$(realpath "${script_dir}/..")
 LOG_DIR=$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")
 TMP_DIR=$(realpath -m "${ROOT_DIR}/tmp")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
+UWSGI_EXECUTABLE=${VIRTUALENV_DIR}/bin/uwsgi
 
 mkdir -p ${LOG_DIR}
 mkdir -p ${TMP_DIR}
@@ -27,9 +28,14 @@ if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
   exit 99
 fi
 
+if [ ! -e "${UWSGI_EXECUTABLE}" ]; then
+  echo "UWSGI_EXECUTABLE set to an nonexistent file: ${UWSGI_EXECUTABLE}"
+  exit 99
+fi
+
 echo -n '[slicer_download] Started at '
 date "+%Y-%m-%d %H:%M:%S"
-${VIRTUALENV_DIR}/bin/uwsgi \
+${UWSGI_EXECUTABLE} \
   --ini ${ROOT_DIR}/etc/uwsgi.ini \
   --set-placeholder root_dir=${ROOT_DIR} \
   --set-placeholder log_dir=${LOG_DIR} \
