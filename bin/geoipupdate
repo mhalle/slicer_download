@@ -2,7 +2,20 @@
 
 set -e
 
-DIST=$(dirname $0)/../dist/geoipupdate
-ETC=$(dirname $0)/../etc/geoip
-exec  ${DIST}/geoipupdate -f  ${ETC}/conf/GeoIP.conf -d ${ETC}/db
+script_dir=$(cd $(dirname $0) || exit 1; pwd)
+
+ROOT_DIR=$(realpath "${script_dir}/..")
+
+GEOIPUPDATE_EXECUTABLE=${ROOT_DIR}/dist/geoipupdate/geoipupdate
+CONFIG_FILE=${ROOT_DIR}/etc/geoip/conf/GeoIP.conf
+DB_DIR=${ROOT_DIR}/etc/geoip/db
+
+echo
+echo "[geoipupdate]"
+echo "  GEOIPUPDATE_EXECUTABLE: ${GEOIPUPDATE_EXECUTABLE}"
+echo "  CONFIG_FILE           : ${CONFIG_FILE}"
+echo "  DB_DIR                : ${DB_DIR}"
+echo
+
+exec  ${GEOIPUPDATE_EXECUTABLE} --verbose -f ${CONFIG_FILE} -d ${DB_DIR}
 
