@@ -102,16 +102,8 @@ def getLocalBitstreamURL(r):
     return downloadURL
 
 
-def recordMatching():
-    """High level function for getting all records matching specific criteria including OS."""
+def getMode():
     request = flask.request
-    revisionRecords = getRecordsFromDb()
-
-    operatingSystem = request.args.get('os')  # may generate BadRequest if not present
-    if operatingSystem not in SupportedOSChoices:
-        return None, 'unknown os "{0}": should be one of {1}'.format(operatingSystem, SupportedOSChoices), 400
-
-    offset = int(request.args.get('offset', '0'))
 
     modeDict = {}
     for name in ModeChoices:
@@ -125,6 +117,24 @@ def recordMatching():
     elif len(list(modeDict.keys())) == 1:
         modeName, value = list(modeDict.items())[0]
     else:
+        return None, None
+
+    return modeName, value
+
+
+def recordMatching():
+    """High level function for getting all records matching specific criteria including OS."""
+    request = flask.request
+    revisionRecords = getRecordsFromDb()
+
+    operatingSystem = request.args.get('os')  # may generate BadRequest if not present
+    if operatingSystem not in SupportedOSChoices:
+        return None, 'unknown os "{0}": should be one of {1}'.format(operatingSystem, SupportedOSChoices), 400
+
+    offset = int(request.args.get('offset', '0'))
+
+    modeName, value = getMode()
+    if modeName is None:
         return None, "invalid or ambiguous mode: should be one of {0}".format(ModeChoices), 400
 
     defaultStability = 'any' if modeName == 'revision' else 'release'
@@ -149,26 +159,10 @@ def recordsMatchingAllOSAndStability():
     request = flask.request
     revisionRecords = getRecordsFromDb()
 
-    modeDict = {}
-    for name in ModeChoices:
-        value = request.args.get(name, None)
-        if value is not None:
-            modeDict[name] = value
-
     offset = int(request.args.get('offset', '0'))
 
-    modeDict = {}
-    for name in ModeChoices:
-        value = request.args.get(name, None)
-        if value is not None:
-            modeDict[name] = value
-
-    if len(list(modeDict.keys())) == 0:
-        modeName = 'date'
-        value = '9999-12-31'  # distant date to force last record
-    elif len(list(modeDict.keys())) == 1:
-        modeName, value = list(modeDict.items())[0]
-    else:
+    modeName, value = getMode()
+    if modeName is None:
         return None, "invalid or ambiguous mode: should be one of {0}".format(ModeChoices), 400
 
     results = {}
