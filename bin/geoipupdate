@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -e
+
 DIST=$(dirname $0)/../dist/geoipupdate
 ETC=$(dirname $0)/../etc/geoip
 exec  ${DIST}/geoipupdate -f  ${ETC}/conf/GeoIP.conf -d ${ETC}/db
