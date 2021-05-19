@@ -107,9 +107,9 @@ def recordMatching():
     request = flask.request
     revisionRecords = getRecordsFromDb()
 
-    os = request.args.get('os')  # may generate BadRequest if not present
-    if os not in SupportedOSChoices:
-        return None, 'unknown os "{0}": should be one of {1}'.format(os, SupportedOSChoices), 400
+    operatingSystem = request.args.get('os')  # may generate BadRequest if not present
+    if operatingSystem not in SupportedOSChoices:
+        return None, 'unknown os "{0}": should be one of {1}'.format(operatingSystem, SupportedOSChoices), 400
 
     offset = int(request.args.get('offset', '0'))
 
@@ -133,7 +133,7 @@ def recordMatching():
     if stability not in StabilityChoices:
         return None, "bad stability {0}: should be one of {1}".format(stability, StabilityChoices), 400
 
-    r = getBestMatching(revisionRecords, os, stability, modeName, value, offset)
+    r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
     c = cleanupMidasRecord(r)
 
     if not c:
@@ -172,19 +172,19 @@ def recordsMatchingAllOSAndStability():
         return None, "invalid or ambiguous mode: should be one of {0}".format(ModeChoices), 400
 
     results = {}
-    for os in SupportedOSChoices:
+    for operatingSystem in SupportedOSChoices:
         osResult = {}
         for stability in ('release', 'nightly'):
-            r = getBestMatching(revisionRecords, os, stability, modeName, value, offset)
+            r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
             osResult[stability] = cleanupMidasRecord(r)
-        results[os] = osResult
+        results[operatingSystem] = osResult
 
     return results, None, 200
 
 
 # query matching functions
-def matchOS(os):
-    return lambda r: r['os'] == os
+def matchOS(operatingSystem):
+    return lambda r: r['os'] == operatingSystem
 
 
 def matchExactRevision(rev):
@@ -271,8 +271,8 @@ def allPass(predlist):
     return pred
 
 
-def getBestMatching(revisionRecords, os, stability, mode, modeArg, offset):
-    osRecords = list(filter(matchOS(os), revisionRecords))
+def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, offset):
+    osRecords = list(filter(matchOS(operatingSystem), revisionRecords))
 
     selectors = [matchStability(stability)]
 
