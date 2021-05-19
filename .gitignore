@@ -4,6 +4,7 @@ env/
 tmp/
 dist/
 etc/geoip/db/*.mmdb
+bin/.start_environment
 
 # Python #
 ##########
