@@ -15,7 +15,8 @@ if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
                            grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
   ${UWSGI_EXECUTABLE} --stop ${PIDFILE}
   rm  ${PIDFILE}
-  exit 99
+  exit 0
 fi
 
 echo "No PID file"
+exit 99
