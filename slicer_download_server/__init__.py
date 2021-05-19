@@ -7,13 +7,26 @@ import sqlite3
 
 from itertools import groupby, islice
 
-SupportedOSChoices = ('macosx', 'win', 'linux')
-StabilityChoices = ('release', 'nightly', 'any')
-ModeChoices = ('revision', 'closest-revision',
-               'version', 'checkout-date', 'date')
+SUPPORTED_OS_CHOICES = (
+    'macosx',
+    'win',
+    'linux'
+)
+STABILITY_CHOICES = (
+    'release',
+    'nightly',
+    'any'
+)
+MODE_CHOICES = (
+    'revision',
+    'closest-revision',
+    'version',
+    'checkout-date',
+    'date'
+)
 
-DownloadURLBase = 'https://slicer.kitware.com/midas3/download'
-LocalBitstreamPath = '/bitstream'
+DOWNLOAD_URL_BASE = 'https://slicer.kitware.com/midas3/download'
+LOCAL_BITSTREAM_PATH = '/bitstream'
 
 app = flask.Flask(__name__)
 app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
@@ -28,7 +41,7 @@ def downloadPage():
 
 @app.route('/bitstream/<bitstreamId>')
 def redirectToSourceBitstream(bitstreamId):
-    midasBitstreamURL = '{0}?bitstream={1}'.format(DownloadURLBase, bitstreamId)
+    midasBitstreamURL = '{0}?bitstream={1}'.format(DOWNLOAD_URL_BASE, bitstreamId)
     return flask.redirect(midasBitstreamURL)
 
 
@@ -98,7 +111,7 @@ def getLocalBitstreamURL(r):
     (e.g., https://download.slicer.org/bitstream/XXXXX )"""
     bitstreamId = r['bitstreams'][0]['bitstream_id']
 
-    downloadURL = '{0}/{1}'.format(LocalBitstreamPath, bitstreamId)
+    downloadURL = '{0}/{1}'.format(LOCAL_BITSTREAM_PATH, bitstreamId)
     return downloadURL
 
 
@@ -106,7 +119,7 @@ def getMode():
     request = flask.request
 
     modeDict = {}
-    for name in ModeChoices:
+    for name in MODE_CHOICES:
         value = request.args.get(name, None)
         if value is not None:
             modeDict[name] = value
@@ -128,20 +141,20 @@ def recordMatching():
     revisionRecords = getRecordsFromDb()
 
     operatingSystem = request.args.get('os')  # may generate BadRequest if not present
-    if operatingSystem not in SupportedOSChoices:
-        return None, 'unknown os "{0}": should be one of {1}'.format(operatingSystem, SupportedOSChoices), 400
+    if operatingSystem not in SUPPORTED_OS_CHOICES:
+        return None, 'unknown os "{0}": should be one of {1}'.format(operatingSystem, SUPPORTED_OS_CHOICES), 400
 
     offset = int(request.args.get('offset', '0'))
 
     modeName, value = getMode()
     if modeName is None:
-        return None, "invalid or ambiguous mode: should be one of {0}".format(ModeChoices), 400
+        return None, "invalid or ambiguous mode: should be one of {0}".format(MODE_CHOICES), 400
 
     defaultStability = 'any' if modeName == 'revision' else 'release'
     stability = request.args.get('stability', defaultStability)
 
-    if stability not in StabilityChoices:
-        return None, "bad stability {0}: should be one of {1}".format(stability, StabilityChoices), 400
+    if stability not in STABILITY_CHOICES:
+        return None, "bad stability {0}: should be one of {1}".format(stability, STABILITY_CHOICES), 400
 
     r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
     c = cleanupMidasRecord(r)
@@ -163,10 +176,10 @@ def recordsMatchingAllOSAndStability():
 
     modeName, value = getMode()
     if modeName is None:
-        return None, "invalid or ambiguous mode: should be one of {0}".format(ModeChoices), 400
+        return None, "invalid or ambiguous mode: should be one of {0}".format(MODE_CHOICES), 400
 
     results = {}
-    for operatingSystem in SupportedOSChoices:
+    for operatingSystem in SUPPORTED_OS_CHOICES:
         osResult = {}
         for stability in ('release', 'nightly'):
             r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
