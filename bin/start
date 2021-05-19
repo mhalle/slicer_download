@@ -22,6 +22,7 @@ if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
 fi
 
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
+HTTP_PORT="${HTTP_PORT:-53683}"
 
 if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
   echo "SLICER_DOWNLOAD_SERVER_CONF set to an nonexistent file: ${SLICER_DOWNLOAD_SERVER_CONF}"
@@ -40,11 +41,13 @@ ${UWSGI_EXECUTABLE} \
   --set-placeholder root_dir=${ROOT_DIR} \
   --set-placeholder log_dir=${LOG_DIR} \
   --set-placeholder tmp_dir=${TMP_DIR} \
-  --set-placeholder virtualenv_dir=${VIRTUALENV_DIR}
+  --set-placeholder virtualenv_dir=${VIRTUALENV_DIR} \
+  --set-placeholder http_port=${HTTP_PORT}
 
 echo
 echo "[slicer_download] Using this config"
 echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
+echo "  HTTP_PORT                  : ${HTTP_PORT}"
 
 echo
 echo "[slicer_download] Using these directories"
