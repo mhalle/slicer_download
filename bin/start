@@ -15,15 +15,30 @@ mkdir -p ${TMP_DIR}
 
 PIDFILE="${TMP_DIR}/slicer_download.pid"
 
+# Bail if already running
 if [ -e "${PIDFILE}" ] && (ps -u $(whoami) -opid= |
                            grep -P "^\s*$(cat ${PIDFILE})$" &> /dev/null); then
   echo "Already running."
   exit 99
 fi
 
+echo -n '[slicer_download] Started at '
+date "+%Y-%m-%d %H:%M:%S"
+
+# Customizing environment
+echo -n "[slicer_download] Looking for ${script_dir}/.start_environment "
+if [ -e "${script_dir}/.start_environment" ]; then
+  source "${script_dir}/.start_environment"
+  echo "[ok]"
+else
+  echo "[not found]"
+fi
+echo
+
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
 HTTP_PORT="${HTTP_PORT:-53683}"
 
+# Sanity checks
 if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
   echo "SLICER_DOWNLOAD_SERVER_CONF set to an nonexistent file: ${SLICER_DOWNLOAD_SERVER_CONF}"
   exit 99
@@ -34,8 +49,7 @@ if [ ! -e "${UWSGI_EXECUTABLE}" ]; then
   exit 99
 fi
 
-echo -n '[slicer_download] Started at '
-date "+%Y-%m-%d %H:%M:%S"
+# Starting server
 ${UWSGI_EXECUTABLE} \
   --ini ${ROOT_DIR}/etc/uwsgi.ini \
   --set-placeholder root_dir=${ROOT_DIR} \
@@ -44,6 +58,7 @@ ${UWSGI_EXECUTABLE} \
   --set-placeholder virtualenv_dir=${VIRTUALENV_DIR} \
   --set-placeholder http_port=${HTTP_PORT}
 
+# Display summary
 echo
 echo "[slicer_download] Using this config"
 echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
