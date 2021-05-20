@@ -263,10 +263,6 @@ def getVersion(record):
     return m.group(1)
 
 
-def getBitstreamInfo(r):
-    return r['bitstreams'][0]
-
-
 def allPass(predlist):
     """returns a function that evaluates each predicate in a list given an argument,
     and returns True if all pass, otherwise False."""
