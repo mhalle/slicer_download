@@ -395,7 +395,7 @@ def openDb():
 
 
 def getRecordsFromDb():
-    """Return all records found in database associated with :func:`getDb`.
+    """Return all records found in database associated with :func:`openDb`.
 
     List of records are cached using an application configuration entry identified
     by ``_MIDAS_RECORDS`` key.
@@ -405,7 +405,7 @@ def getRecordsFromDb():
     except KeyError:
         records = None
 
-    db = getDb()
+    db = openDb()
     cursor = db.cursor()
 
     # get record count
@@ -420,11 +420,6 @@ def getRecordsFromDb():
     db.close()
 
     return records
-
-
-def getDb():
-    db = openDb()
-    return db
 
 
 @app.teardown_appcontext
