@@ -7,4 +7,4 @@ show-source: True
 # Maximum cyclomatic complexity allowed
 max-complexity: 15
 format: pylint
-exclude: .git,.idea,.eggs,__pycache__,.tox,docs/conf.py
+exclude: .git,.idea,.eggs,__pycache__,env,tmp,etc/slicer_parselogs
