@@ -47,6 +47,7 @@ def main(dbfile):
                            [_f for _f in (recordToDb(r) for r in records) if _f])
         db.commit()
 
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("usage is: %s <dbfile>" % sys.argv[0], file=sys.stderr)
