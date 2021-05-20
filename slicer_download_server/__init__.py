@@ -34,6 +34,10 @@ app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
 
 @app.route('/')
 def downloadPage():
+    """Render download page .
+
+    See :func:`recordsMatchingAllOSAndStability`.
+    """
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
 
     return flask.render_template('download.html', R=allRecords)
@@ -41,12 +45,27 @@ def downloadPage():
 
 @app.route('/bitstream/<bitstreamId>')
 def redirectToSourceBitstream(bitstreamId):
+    """Redirect to package download URL of the form ``<DOWNLOAD_URL_BASE>?bitstream=<bitstreamId>``.
+
+    See :const:`DOWNLOAD_URL_BASE`.
+    """
     midasBitstreamURL = '{0}?bitstream={1}'.format(DOWNLOAD_URL_BASE, bitstreamId)
     return flask.redirect(midasBitstreamURL)
 
 
 @app.route('/download')
 def redirectToLocalBitstream():
+    """Lookup ``bitstreamId`` based on matching criteria and redirect to URL of
+    the form ``<DOWNLOAD_URL_BASE>/bitstream/<bitstreamId>``.
+
+    If no record is found, render ``404`` page.
+
+    If one of the matching criteria is incorrectly specified, render the ``400`` page
+    along with details about the issue.
+
+    See :func:`recordMatching`.
+    See :func:`redirectToSourceBitstream` and :func:`getLocalBitstreamURL`.
+    """
     record, error_message, error_code = recordMatching()
 
     if record:
@@ -60,6 +79,15 @@ def redirectToLocalBitstream():
 
 @app.route('/find')
 def recordFindRequest():
+    """Render as JSON document the record matching specific criteria.
+
+    If no record is found, render ``404`` page.
+
+    If one of the matching criteria is incorrectly specified, render the ``400`` page
+    along with details about the issue.
+
+    See :func:`recordMatching`.
+    """
     record, error_message, error_code = recordMatching()
 
     if record:
@@ -73,6 +101,11 @@ def recordFindRequest():
 
 @app.route('/findall')
 def recordFindAllRequest():
+    """Render as JSON document the list of matching records for all OS (see :const:`SUPPORTED_OS_CHOICES`)
+    and stability (see :const:`STABILITY_CHOICES`)
+
+    See :func:`recordsMatchingAllOSAndStability` and :func:`recordMatching`.
+    """
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
 
     if allRecords:
@@ -116,6 +149,12 @@ def getLocalBitstreamURL(r):
 
 
 def getMode():
+    """Convenience function returning the mode name and value extracted
+    from ``flask.request``.
+
+    If no mode parameter was found (see :const:`MODE_CHOICES`), it returns
+    ``None, None``.
+    """
     request = flask.request
 
     modeDict = {}
@@ -136,7 +175,7 @@ def getMode():
 
 
 def recordMatching():
-    """High level function for getting all records matching specific criteria including OS."""
+    """High level function for getting the best record matching specific criteria including OS."""
     request = flask.request
     revisionRecords = getRecordsFromDb()
 
@@ -253,6 +292,19 @@ VersionRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(macosx|linux|win+)')
 
 
 def getVersion(record):
+    """Extract version information from record.
+
+    If ``release`` key is found, returns associated value.
+
+    Otherwise it returns the version extracted from the value associated
+    with the ``name`` key.
+
+    Extraction of the version is attempted using first :const:`VersionWithDateRE`
+    and then :const:`VersionRE`.
+
+    If value associated with the ``name`` key does not match any of the regular
+    expressions, it returns ``None``.
+    """
     if record['release']:
         return record['release']
     m = VersionWithDateRE.match(record['name'])
@@ -264,7 +316,7 @@ def getVersion(record):
 
 
 def allPass(predlist):
-    """returns a function that evaluates each predicate in a list given an argument,
+    """Returns a function that evaluates each predicate in a list given an argument,
     and returns True if all pass, otherwise False."""
     def pred(x):
         for p in predlist:
@@ -275,6 +327,8 @@ def allPass(predlist):
 
 
 def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, offset):
+    """Return best matching record.
+    """
     osRecords = list(filter(matchOS(operatingSystem), revisionRecords))
 
     selectors = [matchStability(stability)]
@@ -327,8 +381,9 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
     return matchingRecord
 
 
-# database handling methods
 def openDb():
+    """Return opened database connection associated with ``MIDAS_DB_FILENAME`` configuration
+    parameter."""
     dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
     if not os.path.isfile(dbfile):
         app.logger.error('database file %s does not exist', dbfile)
@@ -340,6 +395,11 @@ def openDb():
 
 
 def getRecordsFromDb():
+    """Return all records found in database associated with :func:`getDb`.
+
+    List of records are cached using an application configuration entry identified
+    by ``_MIDAS_RECORDS`` key.
+    """
     try:
         records = flask.current_app.config["_MIDAS_RECORDS"]
     except KeyError:
