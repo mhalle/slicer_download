@@ -82,7 +82,7 @@ def redirectToLocalBitstream():
     """Lookup ``bitstreamId`` based on matching criteria and redirect to ``download_url``
     associated with the retrieved matching record.
 
-    The ``download_url`` value is set in :func:`cleanupMidasRecord`.
+    The ``download_url`` value is set in :func:`getCleanedUpRecord`.
 
     If no record is found, render ``404`` page.
 
@@ -142,8 +142,8 @@ def recordFindAllRequest():
     flask.abort(error_code)
 
 
-def cleanupMidasRecord(r):
-    """Return a dictionary of package metadata generated from a raw database record.
+def getCleanedUpRecord(record):
+    """Return a dictionary generated from a raw database record.
 
     It includes new fields and more consistent names.
 
@@ -225,7 +225,7 @@ def recordMatching():
         return None, "bad stability {0}: should be one of {1}".format(stability, STABILITY_CHOICES), 400
 
     r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
-    c = cleanupMidasRecord(r)
+    c = getCleanedUpRecord(r)
 
     if not c:
         return None, "no matching revision for given parameters", 404
@@ -251,7 +251,7 @@ def recordsMatchingAllOSAndStability():
         osResult = {}
         for stability in ('release', 'nightly'):
             r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
-            osResult[stability] = cleanupMidasRecord(r)
+            osResult[stability] = getCleanedUpRecord(r)
         results[operatingSystem] = osResult
 
     return results, None, 200
