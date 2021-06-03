@@ -398,10 +398,10 @@ def getRecordsFromDb():
     """Return all records found in database associated with :func:`openDb`.
 
     List of records are cached using an application configuration entry identified
-    by ``_MIDAS_RECORDS`` key.
+    by ``_CACHED_RECORDS`` key.
     """
     try:
-        records = flask.current_app.config["_MIDAS_RECORDS"]
+        records = flask.current_app.config["_CACHED_RECORDS"]
     except KeyError:
         records = None
 
@@ -416,7 +416,7 @@ def getRecordsFromDb():
     if records is None or count != len(records):
         cursor.execute('select record from _ order by revision desc,build_date desc')
         records = [json.loads(r[0]) for r in cursor.fetchall()]
-        flask.current_app.config["_MIDAS_RECORDS"] = records
+        flask.current_app.config["_CACHED_RECORDS"] = records
     db.close()
 
     return records
