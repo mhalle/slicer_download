@@ -1,2 +1,2 @@
 DEBUG = False
-MIDAS_DB_FILENAME = "../var/slicer-midas-records.sqlite"
+DB_FILE = "../var/slicer-midas-records.sqlite"
