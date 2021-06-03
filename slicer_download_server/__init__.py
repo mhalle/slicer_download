@@ -6,6 +6,8 @@ import os
 import sqlite3
 
 from itertools import groupby, islice
+from enum import Enum
+
 
 SUPPORTED_OS_CHOICES = (
     'macosx',
@@ -25,11 +27,34 @@ MODE_CHOICES = (
     'date'
 )
 
-DOWNLOAD_URL_BASE = 'https://slicer.kitware.com/midas3/download'
 LOCAL_BITSTREAM_PATH = '/bitstream'
 
 app = flask.Flask(__name__)
 app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
+
+
+class ServerAPI(Enum):
+    Midas_v1 = 1
+
+
+def getServerAPI():
+    return ServerAPI[os.getenv("SLICER_DOWNLOAD_SERVER_API", ServerAPI.Midas_v1.name)]
+
+
+def getSourceDownloadURL(package_identifier):
+    """Return package download URL for the current server API.
+
+    +-------------+--------------------------------------------------------------------------------+
+    | Server API  | Download URL                                                                   |
+    +=============+================================================================================+
+    | Midas_v1    | https://slicer.kitware.com/midas3/download?bitstream=<package_identifier>      |
+    +-------------+--------------------------------------------------------------------------------+
+
+    See :func:`getServerAPI`.
+    """
+    return {
+        ServerAPI.Midas_v1: "https://slicer.kitware.com/midas3/download?bitstream={0}",
+    }[getServerAPI()].format(package_identifier)
 
 
 @app.route('/')
@@ -45,12 +70,11 @@ def downloadPage():
 
 @app.route('/bitstream/<bitstreamId>')
 def redirectToSourceBitstream(bitstreamId):
-    """Redirect to package download URL of the form ``<DOWNLOAD_URL_BASE>?bitstream=<bitstreamId>``.
+    """Redirect to package download URL.
 
-    See :const:`DOWNLOAD_URL_BASE`.
+    See :func:`getSourceDownloadURL`.
     """
-    midasBitstreamURL = '{0}?bitstream={1}'.format(DOWNLOAD_URL_BASE, bitstreamId)
-    return flask.redirect(midasBitstreamURL)
+    return flask.redirect(getSourceDownloadURL(bitstreamId))
 
 
 @app.route('/download')
