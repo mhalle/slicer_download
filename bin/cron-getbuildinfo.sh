@@ -10,4 +10,14 @@ PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 
 DB_FILE="${ROOT_DIR}/var/slicer-midas-records.sqlite"
 
+# Customizing environment
+echo -n "[slicer_getbuildinfo] Looking for ${script_dir}/.start_environment "
+if [ -e "${script_dir}/.start_environment" ]; then
+  source "${script_dir}/.start_environment"
+  echo "[ok]"
+else
+  echo "[not found]"
+fi
+echo
+
 "${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_getbuildinfo" ${DB_FILE}
