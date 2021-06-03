@@ -79,8 +79,10 @@ def redirectToSourceBitstream(bitstreamId):
 
 @app.route('/download')
 def redirectToLocalBitstream():
-    """Lookup ``bitstreamId`` based on matching criteria and redirect to URL of
-    the form ``<DOWNLOAD_URL_BASE>/bitstream/<bitstreamId>``.
+    """Lookup ``bitstreamId`` based on matching criteria and redirect to ``download_url``
+    associated with the retrieved matching record.
+
+    The ``download_url`` value is set in :func:`cleanupMidasRecord`.
 
     If no record is found, render ``404`` page.
 
@@ -88,7 +90,6 @@ def redirectToLocalBitstream():
     along with details about the issue.
 
     See :func:`recordMatching`.
-    See :func:`redirectToSourceBitstream` and :func:`getLocalBitstreamURL`.
     """
     record, error_message, error_code = recordMatching()
 
@@ -142,8 +143,12 @@ def recordFindAllRequest():
 
 
 def cleanupMidasRecord(r):
-    """Convert a raw MIDAS record into something a little bit more useful,
-    including new fields and more consistent names."""
+    """Return a dictionary of package metadata generated from a raw database record.
+
+    It includes new fields and more consistent names.
+
+    See :func:`getVersion` and :func:`getLocalBitstreamURL`.
+    """
     if not r:
         return None
     d = {}
