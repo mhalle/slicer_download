@@ -1,16 +1,18 @@
-import sys
-import urllib.request, urllib.error, urllib.parse
-import sqlite3
 import json
+import urllib.error
+import urllib.parse
+import urllib.request
+import sqlite3
+import sys
+import textwrap
 
-InfoURLMethod = 'midas.slicerpackages.get.packages'
-InfoURLBase = 'http://slicer.kitware.com/midas3/api/json'
 
 
 def getMidasRecordsFromURL():
-    infoURL = '{0}?productname=Slicer&method={1}'.format(InfoURLBase, InfoURLMethod)
+    InfoURLMethod = 'midas.slicerpackages.get.packages'
+    InfoURLBase = 'http://slicer.kitware.com/midas3/api/json'
 
-    info = None
+    infoURL = '{0}?productname=Slicer&method={1}'.format(InfoURLBase, InfoURLMethod)
 
     fp = urllib.request.urlopen(infoURL)
     info = fp.read()
@@ -47,9 +49,18 @@ def main(dbfile):
                            [_f for _f in (recordToDb(r) for r in records) if _f])
         db.commit()
 
+    print("Retrieved {0} records".format(len(records)))
+    print("Saved {0}".format(dbfile))
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("usage is: %s <dbfile>" % sys.argv[0], file=sys.stderr)
+        print(textwrap.dedent("""
+        Usage: %s DB_FILE
+
+          Download Slicer application package metadata and update sqlite database
+
+        """ % sys.argv[0]), file=sys.stderr)
         sys.exit(1)
+
     main(sys.argv[1])
