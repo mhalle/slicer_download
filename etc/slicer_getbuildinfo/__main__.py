@@ -1,4 +1,5 @@
 import json
+import os
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -6,13 +7,27 @@ import sqlite3
 import sys
 import textwrap
 
+from enum import Enum
+
+
+class ServerAPI(Enum):
+    Midas_v1 = 1
+
+
+def getServerAPI():
+    return ServerAPI[os.getenv("SLICER_DOWNLOAD_SERVER_API", ServerAPI.Midas_v1.name)]
+
+
+def getServerAPIUrl():
+    return {
+        ServerAPI.Midas_v1: "http://slicer.kitware.com/midas3/api/json",
+    }[getServerAPI()]
 
 
 def getMidasRecordsFromURL():
     InfoURLMethod = 'midas.slicerpackages.get.packages'
-    InfoURLBase = 'http://slicer.kitware.com/midas3/api/json'
 
-    infoURL = '{0}?productname=Slicer&method={1}'.format(InfoURLBase, InfoURLMethod)
+    infoURL = '{0}?productname=Slicer&method={1}'.format(getServerAPIUrl(), InfoURLMethod)
 
     fp = urllib.request.urlopen(infoURL)
     info = fp.read()
@@ -21,7 +36,13 @@ def getMidasRecordsFromURL():
     return json.loads(info)['data']
 
 
-def recordToDb(r):
+def getRecordsFromURL():
+    return {
+        ServerAPI.Midas_v1: getMidasRecordsFromURL,
+    }[getServerAPI()]()
+
+
+def midasRecordToDb(r):
     try:
         return [int(r['item_id']),
                 int(r['revision']),
@@ -32,8 +53,17 @@ def recordToDb(r):
         return None
 
 
+def recordToDb(r):
+    return {
+        ServerAPI.Midas_v1: midasRecordToDb,
+    }[getServerAPI()](r)
+
+
 def main(dbfile):
-    records = getMidasRecordsFromURL()
+
+    print("ServerAPI is {0}: {1}".format(getServerAPI().name, getServerAPIUrl()))
+
+    records = getRecordsFromURL()
     with sqlite3.connect(dbfile) as db:
         db.execute('''create table if not exists
         _(item_id INTEGER primary key,
