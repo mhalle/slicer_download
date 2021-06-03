@@ -382,9 +382,9 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
 
 
 def openDb():
-    """Return opened database connection associated with ``MIDAS_DB_FILENAME`` configuration
+    """Return opened database connection associated with ``DB_FILE`` configuration
     parameter."""
-    dbfile = os.path.join(app.root_path, app.config['MIDAS_DB_FILENAME'])
+    dbfile = os.path.join(app.root_path, app.config['DB_FILE'])
     if not os.path.isfile(dbfile):
         app.logger.error('database file %s does not exist', dbfile)
         raise IOError(2, 'No such file or directory', dbfile)
