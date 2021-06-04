@@ -149,29 +149,37 @@ def getCleanedUpRecord(record):
 
     See :func:`getVersion` and :func:`getLocalBitstreamURL`.
     """
-    if not r:
+    if not record:
         return None
-    d = {}
-    for field in ('arch', 'revision', 'os', 'codebase', 'name', 'package'):
-        d[field] = r[field]
-    d['build_date'] = r['date_creation']
-    d['build_date_ymd'] = d['build_date'].split(' ')[0]
-    d['checkout_date'] = r['checkoutdate']
-    d['checkout_date_ymd'] = d['checkout_date'].split(' ')[0]
+    cleaned = {}
+    for field in (
+        'arch',
+        'revision',
+        'os',
+        'codebase',
+        'name',
+        'package'
+    ):
+        cleaned[field] = record[field]
 
-    d['product_name'] = r['productname']
-    d['stability'] = 'release' if r['release'] else 'nightly'
-    d['size'] = r['bitstreams'][0]['size']
-    d['md5'] = r['bitstreams'][0]['md5']
-    d['version'] = getVersion(r)
-    d['download_url'] = getLocalBitstreamURL(r)
-    return d
+    cleaned['build_date'] = record['date_creation']
+    cleaned['build_date_ymd'] = cleaned['build_date'].split(' ')[0]
+    cleaned['checkout_date'] = record['checkoutdate']
+    cleaned['checkout_date_ymd'] = cleaned['checkout_date'].split(' ')[0]
+
+    cleaned['product_name'] = record['productname']
+    cleaned['stability'] = 'release' if record['release'] else 'nightly'
+    cleaned['size'] = record['bitstreams'][0]['size']
+    cleaned['md5'] = record['bitstreams'][0]['md5']
+    cleaned['version'] = getVersion(record)
+    cleaned['download_url'] = getLocalBitstreamURL(record)
+    return cleaned
 
 
-def getLocalBitstreamURL(r):
+def getLocalBitstreamURL(record):
     """Given a record, return the URL of the local bitstream
     (e.g., https://download.slicer.org/bitstream/XXXXX )"""
-    bitstreamId = r['bitstreams'][0]['bitstream_id']
+    bitstreamId = record['bitstreams'][0]['bitstream_id']
 
     downloadURL = '{0}/{1}'.format(LOCAL_BITSTREAM_PATH, bitstreamId)
     return downloadURL
@@ -224,13 +232,13 @@ def recordMatching():
     if stability not in STABILITY_CHOICES:
         return None, "bad stability {0}: should be one of {1}".format(stability, STABILITY_CHOICES), 400
 
-    r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
-    c = getCleanedUpRecord(r)
+    record = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
+    cleaned = getCleanedUpRecord(record)
 
-    if not c:
+    if not cleaned:
         return None, "no matching revision for given parameters", 404
 
-    return c, None, 200
+    return cleaned, None, 200
 
 
 def recordsMatchingAllOSAndStability():
@@ -250,8 +258,8 @@ def recordsMatchingAllOSAndStability():
     for operatingSystem in SUPPORTED_OS_CHOICES:
         osResult = {}
         for stability in ('release', 'nightly'):
-            r = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
-            osResult[stability] = getCleanedUpRecord(r)
+            record = getBestMatching(revisionRecords, operatingSystem, stability, modeName, value, offset)
+            osResult[stability] = getCleanedUpRecord(record)
         results[operatingSystem] = osResult
 
     return results, None, 200
@@ -259,56 +267,55 @@ def recordsMatchingAllOSAndStability():
 
 # query matching functions
 def matchOS(operatingSystem):
-    return lambda r: r['os'] == operatingSystem
+    return lambda record: record['os'] == operatingSystem
 
 
 def matchExactRevision(rev):
-    def match(r):
-        return int(rev) == int(r['revision'])
+    def match(record):
+        return int(rev) == int(record['revision'])
     return match
 
 
 def matchClosestRevision(rev):
-    def match(r):
-        return int(rev) >= int(r['revision'])
+    def match(record):
+        return int(rev) >= int(record['revision'])
     return match
 
 
 def matchDate(dt, dateType):
-    def match(r):
+    def match(record):
         if dateType == 'date':
-            dateString = r['date_creation']
+            dateString = record['date_creation']
         elif dateType == 'checkout-date':
-            dateString = r['checkoutdate']
+            dateString = record['checkoutdate']
         if not dateString:
             return False
         justDateString = dateString.split(' ')[0]  # drop time
         return dt >= justDateString
-
     return match
 
 
 def matchVersion(version):
-    def match(r):
-        rv = getVersion(r)
-        if not rv:
+    def match(record):
+        record_version = getVersion(record)
+        if not record_version:
             return False
-        rvs = rv.split('.')
-        vs = version.split('.')
-        for i in range(0, len(vs)):
-            if rvs[i] != vs[i]:
+        record_version_parts = record_version.split('.')
+        version_parts = version.split('.')
+        for index in range(0, len(version_parts)):
+            if record_version_parts[index] != version_parts[index]:
                 return False
         return True
     return match
 
 
-def matchStability(s):
-    if s == 'nightly':
-        return lambda r: r['submissiontype'] == 'nightly'
-    if s == 'release':
-        return lambda r: r['release'] != ""
+def matchStability(stability):
+    if stability == 'nightly':
+        return lambda record: record['submissiontype'] == 'nightly'
+    if stability == 'release':
+        return lambda record: record['release'] != ""
 
-    return lambda r: True
+    return lambda record: True
 
 # composite field getters
 
@@ -336,23 +343,23 @@ def getVersion(record):
     """
     if record['release']:
         return record['release']
-    m = VersionWithDateRE.match(record['name'])
-    if not m:
-        m = VersionRE.match(record['name'])
-    if not m:
+    match = VersionWithDateRE.match(record['name'])
+    if not match:
+        match = VersionRE.match(record['name'])
+    if not match:
         return None
-    return m.group(1)
+    return match.group(1)
 
 
 def allPass(predlist):
     """Returns a function that evaluates each predicate in a list given an argument,
     and returns True if all pass, otherwise False."""
-    def pred(x):
-        for p in predlist:
-            if not p(x):
+    def evaluate(x):
+        for pred in predlist:
+            if not pred(x):
                 return False
         return True
-    return pred
+    return evaluate
 
 
 def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, offset):
@@ -380,9 +387,9 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
     matcher = allPass(selectors)
 
     matchingRecordIndex = -1
-    for i, r in enumerate(osRecords):
-        if matcher(r):
-            matchingRecordIndex = i
+    for index, osRecord in enumerate(osRecords):
+        if matcher(osRecord):
+            matchingRecordIndex = index
             break
 
     if matchingRecordIndex == -1:
@@ -390,7 +397,7 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
     else:
         if offset < 0:
             # an offset < 0 looks backward in time, or forward in the list
-            g = groupby(osRecords[matchingRecordIndex:], key=lambda r: int(r['revision']))
+            g = groupby(osRecords[matchingRecordIndex:], key=lambda record: int(record['revision']))
             try:
                 o = next(islice(g, -offset, -offset + 1))
                 matchingRecord = list(o[1])[0]
@@ -399,7 +406,7 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
         elif offset > 0:
             # look forward in time for the latest build of a particular rev, so
             # flip list
-            g = groupby(osRecords[matchingRecordIndex:0:-1], key=lambda r: int(r['revision']))
+            g = groupby(osRecords[matchingRecordIndex:0:-1], key=lambda record: int(record['revision']))
             try:
                 o = next(islice(g, offset, offset + 1))
                 matchingRecord = list(o[1])[-1]
@@ -413,14 +420,14 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
 def openDb():
     """Return opened database connection associated with ``DB_FILE`` configuration
     parameter."""
-    dbfile = os.path.join(app.root_path, app.config['DB_FILE'])
-    if not os.path.isfile(dbfile):
-        app.logger.error('database file %s does not exist', dbfile)
-        raise IOError(2, 'No such file or directory', dbfile)
+    database_file = os.path.join(app.root_path, app.config['DB_FILE'])
+    if not os.path.isfile(database_file):
+        app.logger.error('database file %s does not exist', database_file)
+        raise IOError(2, 'No such file or directory', database_file)
 
-    rv = sqlite3.connect(dbfile)
-    rv.row_factory = sqlite3.Row
-    return rv
+    database_connection = sqlite3.connect(database_file)
+    database_connection.row_factory = sqlite3.Row
+    return database_connection
 
 
 def getRecordsFromDb():
@@ -434,8 +441,8 @@ def getRecordsFromDb():
     except KeyError:
         records = None
 
-    db = openDb()
-    cursor = db.cursor()
+    database_connection = openDb()
+    cursor = database_connection.cursor()
 
     # get record count
     cursor.execute('select count(1) from _')
@@ -444,9 +451,10 @@ def getRecordsFromDb():
     # load db if needed or count has changed
     if records is None or count != len(records):
         cursor.execute('select record from _ order by revision desc,build_date desc')
-        records = [json.loads(r[0]) for r in cursor.fetchall()]
+        records = [json.loads(record[0]) for record in cursor.fetchall()]
         flask.current_app.config["_CACHED_RECORDS"] = records
-    db.close()
+
+    database_connection.close()
 
     return records
 
