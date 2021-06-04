@@ -1,6 +1,7 @@
 import flask
 from flask import json
 
+import dateutil.parser
 import re
 import os
 import sqlite3
@@ -35,6 +36,7 @@ app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
 
 class ServerAPI(Enum):
     Midas_v1 = 1
+    Girder_v1 = 2
 
 
 def getServerAPI():
@@ -49,11 +51,14 @@ def getSourceDownloadURL(package_identifier):
     +=============+================================================================================+
     | Midas_v1    | https://slicer.kitware.com/midas3/download?bitstream=<package_identifier>      |
     +-------------+--------------------------------------------------------------------------------+
+    | Girder_v1   | https://slicer-packages.kitware.com/api/v1/item/<package_identifier>/download  |
+    +-------------+--------------------------------------------------------------------------------+
 
     See :func:`getServerAPI`.
     """
     return {
         ServerAPI.Midas_v1: "https://slicer.kitware.com/midas3/download?bitstream={0}",
+        ServerAPI.Girder_v1: "https://slicer-packages.kitware.com/api/v1/item/{0}/download"
     }[getServerAPI()].format(package_identifier)
 
 
@@ -148,6 +153,30 @@ def recordFindAllRequest():
     flask.abort(error_code)
 
 
+def getRecordField(record, key):
+    if getServerAPI() == ServerAPI.Midas_v1:
+        if key == 'bitstream_id':
+            return record['bitstreams'][0]['bitstream_id']
+        else:
+            return record[key]
+
+    elif getServerAPI() == ServerAPI.Girder_v1:
+        if key == 'os':
+            return record['meta']['os']
+        elif key == 'revision':
+            return record['meta']['revision']
+        elif key == 'date_creation':
+            return record['meta']['build_date']
+        elif key == 'checkoutdate':
+            return None  # Not supported
+        elif key == 'release':
+            return record['meta'].get('release', '')
+        elif key == 'submissiontype':
+            return 'release' if record['meta'].get('release') else 'nightly'
+        elif key == 'bitstream_id':
+            return record['_id']
+
+
 def getCleanedUpRecord(record):
     """Return a dictionary generated from a raw database record.
 
@@ -157,35 +186,61 @@ def getCleanedUpRecord(record):
     """
     if not record:
         return None
+
     cleaned = {}
-    for field in (
-        'arch',
-        'revision',
-        'os',
-        'codebase',
-        'name',
-        'package'
-    ):
-        cleaned[field] = record[field]
 
-    cleaned['build_date'] = record['date_creation']
-    cleaned['build_date_ymd'] = cleaned['build_date'].split(' ')[0]
-    cleaned['checkout_date'] = record['checkoutdate']
-    cleaned['checkout_date_ymd'] = cleaned['checkout_date'].split(' ')[0]
+    if getServerAPI() == ServerAPI.Midas_v1:
 
-    cleaned['product_name'] = record['productname']
-    cleaned['stability'] = 'release' if record['release'] else 'nightly'
-    cleaned['size'] = record['bitstreams'][0]['size']
-    cleaned['md5'] = record['bitstreams'][0]['md5']
-    cleaned['version'] = getVersion(record)
-    cleaned['download_url'] = getLocalBitstreamURL(record)
+        for field in (
+            'arch',
+            'revision',
+            'os',
+            'codebase',
+            'name',
+            'package'
+        ):
+            cleaned[field] = record[field]
+
+        cleaned['build_date'] = record['date_creation']
+        cleaned['build_date_ymd'] = cleaned['build_date'].split(' ')[0]
+        cleaned['checkout_date'] = record['checkoutdate']
+        cleaned['checkout_date_ymd'] = cleaned['checkout_date'].split(' ')[0]
+
+        cleaned['product_name'] = record['productname']
+        cleaned['stability'] = 'release' if record['release'] else 'nightly'
+        cleaned['size'] = record['bitstreams'][0]['size']
+        cleaned['md5'] = record['bitstreams'][0]['md5']
+        cleaned['version'] = getVersion(record)
+        cleaned['download_url'] = getLocalBitstreamURL(record)
+
+    if getServerAPI() == ServerAPI.Girder_v1:
+
+        cleaned['arch'] = record['meta']['arch']
+        cleaned['revision'] = record['meta']['revision']
+        cleaned['os'] = record['meta']['os']
+        cleaned['codebase'] = None  # Not supported
+        cleaned['name'] = record['name']
+        cleaned['package'] = None  # Not supported
+
+        cleaned['build_date'] = record['meta']['build_date']
+        cleaned['build_date_ymd'] = dateutil.parser.parse(record['meta']['build_date']).strftime("%Y-%m-%d")
+        cleaned['checkout_date'] = None  # Not supported
+        cleaned['checkout_date_ymd'] = None  # Not supported
+
+        cleaned['product_name'] = record['meta']['baseName']
+        cleaned['stability'] = 'release' if getRecordField(record, 'release') else 'nightly'
+        cleaned['size'] = record['size']
+        cleaned['md5'] = None  # Not supported
+        cleaned['version'] = getVersion(record)
+        cleaned['download_url'] = getLocalBitstreamURL(record)
+
     return cleaned
 
 
 def getLocalBitstreamURL(record):
     """Given a record, return the URL of the local bitstream
     (e.g., https://download.slicer.org/bitstream/XXXXX )"""
-    bitstreamId = record['bitstreams'][0]['bitstream_id']
+    bitstreamId = getRecordField(record, 'bitstream_id')
 
     downloadURL = '{0}/{1}'.format(LOCAL_BITSTREAM_PATH, bitstreamId)
     return downloadURL
@@ -217,6 +272,14 @@ def getMode():
     return modeName, value
 
 
+def getSupportedMode():
+    """Return list of mode supported by the current server API."""
+    return {
+        ServerAPI.Midas_v1: MODE_CHOICES,
+        ServerAPI.Girder_v1: list(set(MODE_CHOICES) - set(['checkout-date']))
+    }[getServerAPI()]
+
+
 def recordMatching():
     """High level function for getting the best record matching specific criteria including OS."""
     request = flask.request
@@ -231,6 +294,8 @@ def recordMatching():
     modeName, value = getMode()
     if modeName is None:
         return None, "invalid or ambiguous mode: should be one of {0}".format(MODE_CHOICES), 400
+    if modeName not in getSupportedMode():
+        return None, "unsupported mode: should be one of {0}".format(getSupportedMode()), 400
 
     defaultStability = 'any' if modeName == 'revision' else 'release'
     stability = request.args.get('stability', defaultStability)
@@ -259,6 +324,8 @@ def recordsMatchingAllOSAndStability():
     modeName, value = getMode()
     if modeName is None:
         return None, "invalid or ambiguous mode: should be one of {0}".format(MODE_CHOICES), 400
+    if modeName not in getSupportedMode():
+        return None, "unsupported mode: should be one of {0}".format(getSupportedMode()), 400
 
     results = {}
     for operatingSystem in SUPPORTED_OS_CHOICES:
@@ -273,27 +340,27 @@ def recordsMatchingAllOSAndStability():
 
 # query matching functions
 def matchOS(operatingSystem):
-    return lambda record: record['os'] == operatingSystem
+    return lambda record: getRecordField(record, 'os') == operatingSystem
 
 
 def matchExactRevision(rev):
     def match(record):
-        return int(rev) == int(record['revision'])
+        return int(rev) == int(getRecordField(record, 'revision'))
     return match
 
 
 def matchClosestRevision(rev):
     def match(record):
-        return int(rev) >= int(record['revision'])
+        return int(rev) >= int(getRecordField(record, 'revision'))
     return match
 
 
 def matchDate(dt, dateType):
     def match(record):
         if dateType == 'date':
-            dateString = record['date_creation']
+            dateString = getRecordField(record, 'date_creation')
         elif dateType == 'checkout-date':
-            dateString = record['checkoutdate']
+            dateString = getRecordField(record, 'checkoutdate')
         if not dateString:
             return False
         justDateString = dateString.split(' ')[0]  # drop time
@@ -317,9 +384,9 @@ def matchVersion(version):
 
 def matchStability(stability):
     if stability == 'nightly':
-        return lambda record: record['submissiontype'] == 'nightly'
+        return lambda record: getRecordField(record, 'submissiontype') == 'nightly'
     if stability == 'release':
-        return lambda record: record['release'] != ""
+        return lambda record: getRecordField(record, 'release') != ""
 
     return lambda record: True
 
@@ -331,6 +398,7 @@ def matchStability(stability):
 
 VersionWithDateRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(\d{4}-\d{2}-\d{2})')
 VersionRE = re.compile(r'^[A-z]+-([-\d.a-z]+)-(macosx|linux|win+)')
+VersionFullRE = re.compile(r'^([-\d.a-z]+)-(\d{4}-\d{2}-\d{2})')
 
 
 def getVersion(record):
@@ -339,19 +407,31 @@ def getVersion(record):
     If ``release`` key is found, returns associated value.
 
     Otherwise it returns the version extracted from the value associated
-    with the ``name`` key.
+    with the ``name`` key for :const:`ServerAPI.Midas_v1` or the ``meta.version`
+    key for :const:`ServerAPI.Girder_v1`.
 
-    Extraction of the version is attempted using first :const:`VersionWithDateRE`
-    and then :const:`VersionRE`.
+    For :const:`ServerAPI.Midas_v1`, extraction of the version is attempted using
+    first :const:`VersionWithDateRE` and then :const:`VersionRE`.
 
-    If value associated with the ``name`` key does not match any of the regular
+    For :const:`ServerAPI.Girder_v1`, extraction of the version is attempted using
+    first :const:`VersionFullRE`.
+
+    If value associated with the selected key does not match any of the regular
     expressions, it returns ``None``.
     """
-    if record['release']:
-        return record['release']
-    match = VersionWithDateRE.match(record['name'])
-    if not match:
-        match = VersionRE.match(record['name'])
+    if getRecordField(record, 'release'):
+        return getRecordField(record, 'release')
+
+    match = None
+
+    if getServerAPI() == ServerAPI.Midas_v1:
+        match = VersionWithDateRE.match(record['name'])
+        if not match:
+            match = VersionRE.match(record['name'])
+
+    elif getServerAPI() == ServerAPI.Girder_v1:
+        match = VersionFullRE.match(record['meta']['version'])
+
     if not match:
         return None
     return match.group(1)
@@ -403,7 +483,7 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
     else:
         if offset < 0:
             # an offset < 0 looks backward in time, or forward in the list
-            g = groupby(osRecords[matchingRecordIndex:], key=lambda record: int(record['revision']))
+            g = groupby(osRecords[matchingRecordIndex:], key=lambda record: int(getRecordField(record, 'revision')))
             try:
                 o = next(islice(g, -offset, -offset + 1))
                 matchingRecord = list(o[1])[0]
@@ -412,7 +492,7 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
         elif offset > 0:
             # look forward in time for the latest build of a particular rev, so
             # flip list
-            g = groupby(osRecords[matchingRecordIndex:0:-1], key=lambda record: int(record['revision']))
+            g = groupby(osRecords[matchingRecordIndex:0:-1], key=lambda record: int(getRecordField(record, 'revision')))
             try:
                 o = next(islice(g, offset, offset + 1))
                 matchingRecord = list(o[1])[-1]
