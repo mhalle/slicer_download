@@ -64,6 +64,7 @@ echo
 echo "[slicer_download] Using this config"
 echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
+echo "  SLICER_DOWNLOAD_DB_FILE    : ${SLICER_DOWNLOAD_DB_FILE}"
 echo "  HTTP_PORT                  : ${HTTP_PORT}"
 
 echo
