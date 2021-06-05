@@ -65,7 +65,13 @@ def downloadPage():
     """
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
 
-    return flask.render_template('download.html', R=allRecords)
+    if allRecords:
+        return flask.render_template('download.html', R=allRecords)
+
+    if error_code in (400, 404):
+        return flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code
+
+    flask.abort(error_code)
 
 
 @app.route('/bitstream/<bitstreamId>')
