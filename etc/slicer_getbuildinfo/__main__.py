@@ -66,7 +66,7 @@ def girderRecordToDb(r):
     return [r['_id'],
             int(r['meta']['revision']),
             r['created'],
-            r['created'],
+            r['meta']['build_date'],
             json.dumps(r)]
 
 
