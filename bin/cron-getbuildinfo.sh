@@ -17,8 +17,8 @@ else
   echo "[not found]"
 fi
 
-export SLICER_DOWNLOAD_SERVER_API="${SLICER_DOWNLOAD_SERVER_API:-Midas_v1}"
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
+export SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.getServerAPI().name)")
 SLICER_DOWNLOAD_DB_FILE=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.dbFilePath())")
 
 # Sanity checks
@@ -30,8 +30,8 @@ fi
 # Display summary
 echo
 echo "[slicer_getbuildinfo] Using this config"
-echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
+echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 echo "  SLICER_DOWNLOAD_DB_FILE    : ${SLICER_DOWNLOAD_DB_FILE}"
 echo
 echo "[slicer_getbuildinfo] Using these directories"
