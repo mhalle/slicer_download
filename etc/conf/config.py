@@ -1,4 +1,9 @@
 import os
+import sys
 
-DB_FALLBACK = os.environ.get("SLICER_DOWNLOAD_DB_FALLBACK", False)
+sys.path.insert(0, os.path.dirname(__file__))
+from config_utils import toBool  # noqa: E402
+
+
+DB_FALLBACK = toBool(os.environ.get("SLICER_DOWNLOAD_DB_FALLBACK", False))
 DEBUG = False
