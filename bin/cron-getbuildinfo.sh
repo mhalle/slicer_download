@@ -8,8 +8,6 @@ ROOT_DIR=$(realpath "${script_dir}/..")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
 PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 
-DB_FILE="${ROOT_DIR}/var/slicer-midas-records.sqlite"
-
 # Customizing environment
 echo -n "[slicer_getbuildinfo] Looking for ${script_dir}/.start_environment "
 if [ -e "${script_dir}/.start_environment" ]; then
@@ -18,6 +16,26 @@ if [ -e "${script_dir}/.start_environment" ]; then
 else
   echo "[not found]"
 fi
-echo
 
-"${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_getbuildinfo" ${DB_FILE}
+export SLICER_DOWNLOAD_SERVER_API="${SLICER_DOWNLOAD_SERVER_API:-Midas_v1}"
+export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
+SLICER_DOWNLOAD_DB_FILE=$(${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.dbFilePath())")
+
+# Sanity checks
+if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
+  echo "SLICER_DOWNLOAD_SERVER_CONF set to an nonexistent file: ${SLICER_DOWNLOAD_SERVER_CONF}"
+  exit 99
+fi
+
+# Display summary
+echo
+echo "[slicer_getbuildinfo] Using this config"
+echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
+echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
+echo "  SLICER_DOWNLOAD_DB_FILE    : ${SLICER_DOWNLOAD_DB_FILE}"
+echo
+echo "[slicer_getbuildinfo] Using these directories"
+echo "  ROOT_DIR       : ${ROOT_DIR}"
+
+echo
+"${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_getbuildinfo" ${SLICER_DOWNLOAD_DB_FILE}

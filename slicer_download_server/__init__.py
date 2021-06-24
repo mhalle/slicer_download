@@ -503,31 +503,73 @@ def getBestMatching(revisionRecords, operatingSystem, stability, mode, modeArg, 
     return matchingRecord
 
 
-def openDb():
-    """Return opened database connection associated with ``DB_FILE`` configuration
-    parameter."""
-    database_file = os.path.join(app.root_path, app.config['DB_FILE'])
-    if not os.path.isfile(database_file):
-        app.logger.error('database file %s does not exist', database_file)
-        raise IOError(2, 'No such file or directory', database_file)
+def dbFilePath():
+    """Return database filepath.
 
-    database_connection = sqlite3.connect(database_file)
+    If a relative path is associated with either configuration entry or the environment
+    variable, ``app.root_path`` is prepended.
+
+    The filepath is set following these steps:
+
+    1. If set, returns value associated  with ``DB_FILE`` configuration entry.
+
+    2. If set, returns value associated with ``SLICER_DOWNLOAD_DB_FILE`` environment variable.
+
+    3. If ``DB_FALLBACK`` configuration entry is set to True, returns
+       ``<app.root_path>/etc/fallback/slicer-<server_api>-records.sqlite``
+       otherwise returns ``<app.root_path>/var/slicer-<server_api>-records.sqlite``
+       where ``<server_api>`` is set to ``midas`` or ``girder`` based on :func:`getServerAPI()`.
+    """
+
+    if 'DB_FILE' in app.config:
+        db_file = app.config['DB_FILE']
+    elif 'SLICER_DOWNLOAD_DB_FILE' in os.environ:
+        db_file = os.environ["SLICER_DOWNLOAD_DB_FILE"]
+    else:
+        fallback = app.config.get('DB_FALLBACK', False)
+        subdir = '../var' if not fallback else '../etc/fallback'
+        db_file = os.path.join(
+            subdir,
+            {
+                ServerAPI.Midas_v1: 'slicer-midas-records.sqlite',
+                ServerAPI.Girder_v1: 'slicer-girder-records.sqlite'
+            }[getServerAPI()]
+        )
+
+    if not os.path.isabs(db_file):
+        return os.path.join(app.root_path, db_file)
+    else:
+        return db_file
+
+
+def openDb(database_filepath):
+    """Return opened database connection."""
+
+    if not os.path.isfile(database_filepath):
+        app.logger.error('database file %s does not exist', database_filepath)
+        raise IOError(2, 'No such file or directory', database_filepath)
+
+    database_connection = sqlite3.connect(database_filepath)
     database_connection.row_factory = sqlite3.Row
     return database_connection
 
 
 def getRecordsFromDb():
-    """Return all records found in database associated with :func:`openDb`.
+    """Return all records found in the database associated with :func:`dbFilePath()`.
 
     List of records are cached using an application configuration entry identified
     by ``_CACHED_RECORDS`` key.
+
+    See also :func:`openDb`.
     """
     try:
         records = flask.current_app.config["_CACHED_RECORDS"]
     except KeyError:
         records = None
 
-    database_connection = openDb()
+    database_filepath = dbFilePath()
+    app.logger.info("database_filepath: %s" % database_filepath)
+    database_connection = openDb(database_filepath)
     cursor = database_connection.cursor()
 
     # get record count

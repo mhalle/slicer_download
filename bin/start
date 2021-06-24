@@ -8,6 +8,7 @@ ROOT_DIR=$(realpath "${script_dir}/..")
 LOG_DIR=$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")
 TMP_DIR=$(realpath -m "${ROOT_DIR}/tmp")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
+PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 UWSGI_EXECUTABLE=${VIRTUALENV_DIR}/bin/uwsgi
 
 mkdir -p ${LOG_DIR}
@@ -33,11 +34,11 @@ if [ -e "${script_dir}/.start_environment" ]; then
 else
   echo "[not found]"
 fi
-echo
 
 export SLICER_DOWNLOAD_SERVER_API="${SLICER_DOWNLOAD_SERVER_API:-Midas_v1}"
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
 HTTP_PORT="${HTTP_PORT:-53683}"
+SLICER_DOWNLOAD_DB_FILE=$(${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.dbFilePath())")
 
 # Sanity checks
 if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
@@ -51,6 +52,7 @@ if [ ! -e "${UWSGI_EXECUTABLE}" ]; then
 fi
 
 # Starting server
+echo
 ${UWSGI_EXECUTABLE} \
   --ini ${ROOT_DIR}/etc/uwsgi.ini \
   --set-placeholder root_dir=${ROOT_DIR} \
