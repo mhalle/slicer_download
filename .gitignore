@@ -7,6 +7,8 @@ etc/geoip/db/*.mmdb
 bin/.start_environment
 etc/fallback/*.sqlite
 etc/fallback/*.sqlite.sha256
+var/*
+!var/.keep
 
 # Python #
 ##########
