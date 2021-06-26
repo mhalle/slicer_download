@@ -69,9 +69,10 @@ def downloadPage():
     See :func:`recordsMatchingAllOSAndStability`.
     """
     allRecords, error_message, error_code = recordsMatchingAllOSAndStability()
+    download_stats_url = '/'.join([flask.request.host_url.strip('/'), 'download-stats'])
 
     if allRecords:
-        return flask.render_template('download.html', R=allRecords)
+        return flask.render_template('download.html', R=allRecords, download_stats_url=download_stats_url)
 
     if error_code in (400, 404):
         return flask.render_template('{0}.html'.format(error_code), error_message=error_message), error_code
