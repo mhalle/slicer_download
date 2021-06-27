@@ -5,13 +5,11 @@ set -e
 script_dir=$(cd $(dirname $0) || exit 1; pwd)
 
 ROOT_DIR=$(realpath "${script_dir}/..")
-LOG_DIR=$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")
 TMP_DIR=$(realpath -m "${ROOT_DIR}/tmp")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
 PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 UWSGI_EXECUTABLE=${VIRTUALENV_DIR}/bin/uwsgi
 
-mkdir -p ${LOG_DIR}
 mkdir -p ${TMP_DIR}
 
 PIDFILE="${TMP_DIR}/slicer_download.pid"
@@ -34,6 +32,9 @@ if [ -e "${script_dir}/.start_environment" ]; then
 else
   echo "[not found]"
 fi
+
+LOG_DIR=${LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")}
+mkdir -p ${LOG_DIR}
 
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
 HTTP_PORT="${HTTP_PORT:-53683}"
