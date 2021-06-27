@@ -7,15 +7,15 @@ script_dir=$(cd $(dirname $0) || exit 1; pwd)
 ROOT_DIR=$(realpath "${script_dir}/..")
 
 GEOIPUPDATE_EXECUTABLE=${ROOT_DIR}/dist/geoipupdate/geoipupdate
-CONFIG_FILE=${ROOT_DIR}/etc/geoip/conf/GeoIP.conf
-DB_DIR=${ROOT_DIR}/etc/geoip/db
+GEOIP_CONFIG_FILE=${ROOT_DIR}/etc/geoip/conf/GeoIP.conf
+GEOIP_DB_DIR=${ROOT_DIR}/etc/geoip/db
 
 echo
 echo "[geoipupdate]"
 echo "  GEOIPUPDATE_EXECUTABLE: ${GEOIPUPDATE_EXECUTABLE}"
-echo "  CONFIG_FILE           : ${CONFIG_FILE}"
-echo "  DB_DIR                : ${DB_DIR}"
-echo
+echo "  GEOIP_CONFIG_FILE     : ${GEOIP_CONFIG_FILE}"
+echo "  GEOIP_DB_DIR          : ${GEOIP_DB_DIR}"
 
-exec  ${GEOIPUPDATE_EXECUTABLE} --verbose -f ${CONFIG_FILE} -d ${DB_DIR}
+echo
+exec  ${GEOIPUPDATE_EXECUTABLE} --verbose -f ${GEOIP_CONFIG_FILE} -d ${GEOIP_DB_DIR}
 
