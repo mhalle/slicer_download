@@ -1,13 +1,13 @@
 import geoip2.database    
 
 
-
 def create_geoip_table(db):
     with db as c:
         c.execute('''create table if not exists
             ipinfo (ip primary key, country_code, country_code3, country_name,
             region_name, city, latitude, longitude);
         ''')
+
 
 def add_geoip_info(db, geoip_data_filename):
 
@@ -45,8 +45,6 @@ def add_geoip_info(db, geoip_data_filename):
         except (KeyError, IndexError):
             country = None
 
-
-
         db.execute('''insert or replace into ipinfo(ip,
                                         country_code, country_code3, country_name,
                                         region_name, city, latitude, longitude)
@@ -60,5 +58,5 @@ def add_geoip_info(db, geoip_data_filename):
                                         float(r.location.latitude),
                                         float(r.location.longitude)))
         ipCompleted.add(ip)
-        db.commit() # commit per record in case we exit
+        db.commit()  # commit per record in case we exit
     return

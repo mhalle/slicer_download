@@ -1,5 +1,6 @@
-from urllib.request import urlopen
 import json
+import urllib.request
+
 
 def create_bitstream_table(db):
     with db as c:
@@ -10,8 +11,9 @@ def create_bitstream_table(db):
         ''')
         return
 
+
 def add_bitstream_info(db, slicer_records_url):
-    data = json.load(urlopen(slicer_records_url))
+    data = json.load(urllib.request.urlopen(slicer_records_url))
     records = data['data']
     for r in records:
         bs = r['bitstreams'][0]

@@ -1,5 +1,6 @@
-import countries
 import re
+
+from . import countries
 
 ''' bitstream[id] = {
      os: {mac,win,linux}
@@ -43,10 +44,12 @@ AccessQuery =  """
 """
 
 EUCountryInfo = ['European Union', 'Western Europe', 'Europe']
+
 BitTable = {
     'i386': 32,
     'amd64': 64
 }
+
 
 def get_download_stats_data(db):
     bitstream = build_bitstream_table(db)
@@ -93,7 +96,8 @@ def build_bitstream_table(db):
                 'checkout': event_date
             }
     return bitstream_table
-    
+
+
 def build_access_table(db):
     access_table = []
     location_cache = []
@@ -116,6 +120,7 @@ def build_access_table(db):
                     loci))
     return (access_table, location_cache)
 
+
 def build_country_code_table(db):
     all_country_info = countries_by_isocode()
     country_table = {}
@@ -135,11 +140,13 @@ def build_country_code_table(db):
                 country_table[country_isocode] = (country_isocode, "unknown", "unknown")
     return country_table
 
+
 def countries_by_isocode():
     index = {}
     for c in countries.country_data:
         index[c['cca2']] = c
     return index
+
 
 def format_latlng(lat, lng):
     return '{:f},{:f}'.format(lat, lng)

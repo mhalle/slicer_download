@@ -1,19 +1,21 @@
-import os, sys
-import sqlite3
 import argparse
 import json
+import sqlite3
+import sys
 
-import access 
-import bitstream
-import geoip
-import useragent
-import slicerstats
+from slicer_parselogs import (
+    access,
+    bitstream,
+    geoip,
+    useragent,
+    slicerstats
+)
 
 SlicerMidasRecordsURL = \
  "http://slicer.kitware.com/midas3/api/rest/?method=midas.slicerpackages.get.packages&format=json"
 
-if __name__ == '__main__':
 
+def main():
     argparser = argparse.ArgumentParser(description='Process Slicer4 download information.')
     argparser.add_argument('--db', required=True, help="sqlite stats database")
     argparser.add_argument('--geoip', required=True, help="geoip data file")
@@ -53,3 +55,6 @@ if __name__ == '__main__':
     db.close()
     sys.exit(0)
 
+
+if __name__ == '__main__':
+    main()

@@ -8,6 +8,7 @@ def create_useragent_table(db):
                     browser_type, ua_name, os_name, os_family)
         ''')
 
+
 def get_browser_type_compat(rec):
     family = rec['device']['family']
 
@@ -17,12 +18,14 @@ def get_browser_type_compat(rec):
         return 'Browser'
     return 'MobileBrowser'
 
+
 def pretty_os(rec):
     os = rec['os']
-    return user_agent_parser.PrettyOS(os['family'], 
-                                      os['major'], 
-                                      os['minor'], 
+    return user_agent_parser.PrettyOS(os['family'],
+                                      os['major'],
+                                      os['minor'],
                                       os['patch'])
+
 
 def add_useragent_info(db):
     ua_completed = set()

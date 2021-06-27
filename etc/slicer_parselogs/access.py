@@ -3,9 +3,10 @@ import re
 import gzip
 import os
 import apache_log_parser
-from contextlib import ExitStack
+
 
 bitstreamRE = re.compile(r'/bitstream/(\d+)')
+
 
 def create_access_table(db):
     "Initialize sqlite table for web access records."
@@ -16,6 +17,7 @@ def create_access_table(db):
 
         c.execute('''create unique index if not exists access_unique_idx
                     on access(bitstream_id, ip, ts)''')
+
 
 def add_access_info(db, filenames):
     """Add bitstream access information to sqlite table."""
@@ -33,6 +35,7 @@ def add_access_info(db, filenames):
                     values(?, ?, ?, ?)""",
                     (bitstream_id, host, access_time, user_agent))
     db.commit()
+
 
 def read_and_parse(filenames):
     """Read all apache log files (possibly gzipped) and 
@@ -54,6 +57,7 @@ def read_and_parse(filenames):
                 print("failed to parse '{0}'".format(line), file=sys.stderr)
                 continue
             yield p
+
 
 def create_log_parser():
     "Create parser for apache log entries (webfaction default)"

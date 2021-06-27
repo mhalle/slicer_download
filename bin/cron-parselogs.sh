@@ -30,6 +30,7 @@ echo "[slicer_getbuildinfo] Using these directories"
 echo "  ROOT_DIR       : ${ROOT_DIR}"
 
 echo
+export PYTHONPATH=${ROOT_DIR}/etc/
 exec "${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_parselogs" \
     --db ${DBFILE} \
     --geoip ${GEOIPFILE} \
