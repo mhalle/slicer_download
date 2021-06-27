@@ -8,13 +8,13 @@ ROOT_DIR=$(realpath "${script_dir}/..")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
 PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 
-APP=slicer_download
+SITE=download_slicer_org
 
 DBFILE="${ROOT_DIR}/var/download-stats.sqlite"
 GEOIPFILE="${ROOT_DIR}/etc/geoip/db/GeoLite2-City.mmdb"
 STATSDATAFILE="${ROOT_DIR}/var/slicer-download-data.json"
 
-APACHELOGS="${ROOT_DIR}/../logs/sites/${APP}/access*"
+APACHELOGS="${ROOT_DIR}/../logs/sites/${SITE}/access*"
 # EXTRALOGS="${ROOT_DIR}/legacy-logs/*"
 EXTRALOGS=""
 
