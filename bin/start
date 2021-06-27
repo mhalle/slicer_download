@@ -36,12 +36,12 @@ else
 fi
 
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
-export SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.getServerAPI().name)")
 HTTP_PORT="${HTTP_PORT:-53683}"
 SLICER_DOWNLOAD_DB_FALLBACK=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.app.config['DB_FALLBACK'])")
 SLICER_DOWNLOAD_DB_FILE=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.dbFilePath())")
 SLICER_DOWNLOAD_DEBUG=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.app.config['DEBUG'])")
 SLICER_DOWNLOAD_HOSTNAME="${SLICER_DOWNLOAD_HOSTNAME:-http://127.0.0.1:${HTTP_PORT}}"
+SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.getServerAPI().name)")
 
 # Sanity checks
 if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
@@ -68,12 +68,12 @@ ${UWSGI_EXECUTABLE} \
 echo
 echo "[slicer_download] Using this config"
 echo "  SLICER_DOWNLOAD_SERVER_CONF: ${SLICER_DOWNLOAD_SERVER_CONF}"
-echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 echo "  SLICER_DOWNLOAD_DB_FALLBACK: ${SLICER_DOWNLOAD_DB_FALLBACK}"
 echo "  SLICER_DOWNLOAD_DB_FILE    : ${SLICER_DOWNLOAD_DB_FILE}"
 echo "  SLICER_DOWNLOAD_DEBUG      : ${SLICER_DOWNLOAD_DEBUG}"
 echo "  HTTP_PORT                  : ${HTTP_PORT}"
 echo "  SLICER_DOWNLOAD_HOSTNAME   : ${SLICER_DOWNLOAD_HOSTNAME}"
+echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 
 echo
 echo "[slicer_download] Using these directories"
