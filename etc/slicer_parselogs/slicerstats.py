@@ -70,6 +70,7 @@ def build_bitstream_table(db):
     bitstream_table = {}
 
     with db as cur:
+        print("executing 'BitstreamQuery'")
         for row in cur.execute(BitstreamQuery):
             bitstream_id = int(row['bitstream_id'])
             name = row['filename']
@@ -105,6 +106,7 @@ def build_access_table(db):
     location_id = 0
     
     with db as cur:
+        print("executing 'AccessQuery'")
         for row in cur.execute(AccessQuery):
             locs = format_latlng(row['latitude'], row['longitude'])
             try:
@@ -125,6 +127,7 @@ def build_country_code_table(db):
     all_country_info = countries_by_isocode()
     country_table = {}
     with db as cur:
+        print("executing 'CountryCodeQuery'")
         for row in cur.execute(CountryCodeQuery):
             country_isocode = row['country_code']
             country_info = all_country_info.get(country_isocode, None)

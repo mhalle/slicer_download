@@ -10,6 +10,7 @@ bitstreamRE = re.compile(r'/bitstream/(\d+)')
 
 def create_access_table(db):
     "Initialize sqlite table for web access records."
+    print("creating 'access' table")
     with db as c:
         c.execute('''create table if not exists
                 access (bitstream_id, ip, ts, useragent)
@@ -21,6 +22,7 @@ def create_access_table(db):
 
 def add_access_info(db, filenames):
     """Add bitstream access information to sqlite table."""
+    print("populating 'access' table")
     for access in read_and_parse(filenames):
         req = access['request_url_path']
         m = bitstreamRE.match(req)

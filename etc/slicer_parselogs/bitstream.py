@@ -5,6 +5,7 @@ from slicer_download import (
 
 
 def create_bitstream_table(db):
+    print("creating 'bsinfo' table")
     with db as c:
         c.execute('''create table if not exists
             bsinfo (bitstream_id primary key, filename, os, arch,
@@ -15,6 +16,7 @@ def create_bitstream_table(db):
 
 
 def add_bitstream_info(db, records):
+    print("populating 'bsinfo' table")
     if getServerAPI() == ServerAPI.Girder_v1:
         return
     for r in records:

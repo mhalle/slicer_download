@@ -2,6 +2,7 @@ from ua_parser import user_agent_parser
 
 
 def create_useragent_table(db):
+    print("creating 'uainfo' table")
     with db as c:
         c.execute('''create table if not exists
             uainfo (useragent primary key, 
@@ -28,6 +29,7 @@ def pretty_os(rec):
 
 
 def add_useragent_info(db):
+    print("populating 'uainfo' table")
     ua_completed = set()
     for ua in list(db.execute("""select useragent from access
                             except

@@ -2,6 +2,7 @@ import geoip2.database
 
 
 def create_geoip_table(db):
+    print("creating 'ipinfo' table")
     with db as c:
         c.execute('''create table if not exists
             ipinfo (ip primary key, country_code, country_code3, country_name,
@@ -10,6 +11,7 @@ def create_geoip_table(db):
 
 
 def add_geoip_info(db, geoip_data_filename):
+    print("populating 'ipinfo' table")
 
     geoip_reader = geoip2.database.Reader(geoip_data_filename)
     geoip_lookup = geoip_reader.city  # use the city database

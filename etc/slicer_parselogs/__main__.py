@@ -49,6 +49,7 @@ def main():
 
     slicer_stats_data = slicerstats.get_download_stats_data(db)
     with open(statsdata, 'w+') as statsfp:
+        print('writing %s' % statsdata)
         json.dump(slicer_stats_data, statsfp, separators=(',', ':'))
 
     db.close()
