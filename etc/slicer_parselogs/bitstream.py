@@ -1,5 +1,7 @@
 from slicer_download import (
     getServerAPI,
+    progress,
+    progress_end,
     ServerAPI
 )
 
@@ -19,7 +21,8 @@ def add_bitstream_info(db, records):
     print("populating 'bsinfo' table")
     if getServerAPI() == ServerAPI.Girder_v1:
         return
-    for r in records:
+    for index, r in enumerate(records, start=1):
+        progress(index, len(records))
         bs = r['bitstreams'][0]
         db.execute("""
             insert or replace into bsinfo(
@@ -40,4 +43,5 @@ def add_bitstream_info(db, records):
                  r['checkoutdate'],  #checkout_date
                  bs['size']))
         db.commit()
-    return
+
+    progress_end()

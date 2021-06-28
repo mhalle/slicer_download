@@ -1,3 +1,7 @@
+from slicer_download import (
+    progress,
+    progress_end
+)
 from ua_parser import user_agent_parser
 
 
@@ -31,9 +35,9 @@ def pretty_os(rec):
 def add_useragent_info(db):
     print("populating 'uainfo' table")
     ua_completed = set()
-    for ua in list(db.execute("""select useragent from access
-                            except
-                            select useragent from uainfo""")):
+    uas = list(db.execute("select useragent from access except select useragent from uainfo"))
+    for index, ua in enumerate(uas, start=1):
+        progress(index, len(uas))
         user_agent = ua[0]
         if user_agent in ua_completed:
             continue
@@ -51,4 +55,4 @@ def add_useragent_info(db):
                      ua_rec['os']['family']))
         ua_completed.add(user_agent)
         db.commit() # commit per record in case we exit
-    return
+    progress_end()

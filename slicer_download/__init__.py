@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import sqlite3
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -54,3 +55,24 @@ def openDb(database_filepath):
     database_connection = sqlite3.connect(database_filepath)
     database_connection.row_factory = sqlite3.Row
     return database_connection
+
+
+def progress(count, total, status=''):
+    """Adapted from https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+    """
+    if not sys.stdout.isatty():
+        return
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('\r[{0}] {1}%  {2}'.format(bar, percents, status))
+    sys.stdout.flush()
+
+
+def progress_end():
+    if not sys.stdout.isatty():
+        return
+    print("")

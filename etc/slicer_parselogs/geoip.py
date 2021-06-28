@@ -1,4 +1,9 @@
-import geoip2.database    
+import geoip2.database
+
+from slicer_download import (
+    progress,
+    progress_end
+)
 
 
 def create_geoip_table(db):
@@ -17,9 +22,9 @@ def add_geoip_info(db, geoip_data_filename):
     geoip_lookup = geoip_reader.city  # use the city database
 
     ipCompleted = set()
-    for ip in list(db.execute("""select ip from access
-                            except
-                            select ip from ipinfo""")):
+    ips = list(db.execute("select ip from access except select ip from ipinfo"))
+    for index, ip in enumerate(ips, start=1):
+        progress(index, len(ips))
         ip = ip[0]
         if ip in ipCompleted:
             continue
@@ -61,4 +66,4 @@ def add_geoip_info(db, geoip_data_filename):
                                         float(r.location.longitude)))
         ipCompleted.add(ip)
         db.commit()  # commit per record in case we exit
-    return
+    progress_end()
