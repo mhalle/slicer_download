@@ -1,7 +1,11 @@
 import argparse
 import json
-import sqlite3
 import sys
+
+from slicer_download import (
+    openDb,
+    getRecordsFromURL
+)
 
 from slicer_parselogs import (
     access,
@@ -10,9 +14,6 @@ from slicer_parselogs import (
     useragent,
     slicerstats
 )
-
-SlicerMidasRecordsURL = \
- "http://slicer.kitware.com/midas3/api/rest/?method=midas.slicerpackages.get.packages&format=json"
 
 
 def main():
@@ -28,9 +29,7 @@ def main():
     filenames = args.filenames
     statsdata = args.statsdata
 
-    db = sqlite3.connect(dbname)
-    db.row_factory = sqlite3.Row
-    cursor = db.cursor()
+    db = openDb(dbname)
 
     access.create_access_table(db)
     bitstream.create_bitstream_table(db)
@@ -44,7 +43,7 @@ def main():
     geoip.add_geoip_info(db, geoip_filename)
     useragent.add_useragent_info(db)
     if not args.nomidas:
-        bitstream.add_bitstream_info(db, SlicerMidasRecordsURL)
+        bitstream.add_bitstream_info(db, getRecordsFromURL())
 
     # then write out slicer json
 

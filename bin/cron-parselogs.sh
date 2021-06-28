@@ -17,6 +17,8 @@ else
   echo "[not found]"
 fi
 
+SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download as sd; print(sd.getServerAPI().name)")
+
 SLICER_DOWNLOAD_STATS_DB_FILE="${ROOT_DIR}/var/download-stats.sqlite"
 SLICER_DOWNLOAD_STATS_DATA_FILE="${ROOT_DIR}/var/slicer-download-data.json"
 
@@ -34,6 +36,7 @@ EXTRALOGS=""
 echo
 echo "[slicer_parselogs] Using this config"
 echo "  SLICER_DOWNLOAD_ACCESS_LOGS      : ${SLICER_DOWNLOAD_ACCESS_LOGS}"
+echo "  SLICER_DOWNLOAD_SERVER_API       : ${SLICER_DOWNLOAD_SERVER_API}"
 echo "  SLICER_DOWNLOAD_STATS_DB_FILE    : ${SLICER_DOWNLOAD_STATS_DB_FILE}"
 echo "  SLICER_DOWNLOAD_STATS_DATA_FILE  : ${SLICER_DOWNLOAD_STATS_DATA_FILE}"
 echo "  GEOIP_DB_FILE                    : ${GEOIP_DB_FILE}"
@@ -43,7 +46,7 @@ echo "  ROOT_DIR       : ${ROOT_DIR}"
 echo "  LOG_DIR        : ${LOG_DIR}"
 
 echo
-export PYTHONPATH=${ROOT_DIR}/etc/
+export PYTHONPATH=${ROOT_DIR}:${ROOT_DIR}/etc
 exec "${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_parselogs" \
     --db ${SLICER_DOWNLOAD_STATS_DB_FILE} \
     --geoip ${GEOIP_DB_FILE} \

@@ -1,5 +1,7 @@
-import json
-import urllib.request
+from slicer_download import (
+    getServerAPI,
+    ServerAPI
+)
 
 
 def create_bitstream_table(db):
@@ -12,9 +14,9 @@ def create_bitstream_table(db):
         return
 
 
-def add_bitstream_info(db, slicer_records_url):
-    data = json.load(urllib.request.urlopen(slicer_records_url))
-    records = data['data']
+def add_bitstream_info(db, records):
+    if getServerAPI() == ServerAPI.Girder_v1:
+        return
     for r in records:
         bs = r['bitstreams'][0]
         db.execute("""
