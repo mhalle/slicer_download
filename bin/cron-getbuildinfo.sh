@@ -21,7 +21,7 @@ export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/e
 SLICER_DOWNLOAD_DB_FALLBACK=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.app.config['DB_FALLBACK'])")
 SLICER_DOWNLOAD_DB_FILE=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.dbFilePath())")
 SLICER_DOWNLOAD_DEBUG=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.app.config['DEBUG'])")
-SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download_server as sds; print(sds.getServerAPI().name)")
+SLICER_DOWNLOAD_SERVER_API=$(PYTHONPATH=${ROOT_DIR} ${PYTHON_EXECUTABLE} -c "import slicer_download as sd; print(sd.getServerAPI().name)")
 
 # Sanity checks
 if [ ! -e "${SLICER_DOWNLOAD_SERVER_CONF}" ]; then
@@ -42,4 +42,4 @@ echo "[slicer_getbuildinfo] Using these directories"
 echo "  ROOT_DIR       : ${ROOT_DIR}"
 
 echo
-"${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_getbuildinfo" ${SLICER_DOWNLOAD_DB_FILE}
+PYTHONPATH=${ROOT_DIR} "${PYTHON_EXECUTABLE}" "${ROOT_DIR}/etc/slicer_getbuildinfo" ${SLICER_DOWNLOAD_DB_FILE}

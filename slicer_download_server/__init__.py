@@ -2,13 +2,16 @@ import flask
 from flask import json
 
 import dateutil.parser
-import re
 import os
-import sqlite3
+import re
 
 from itertools import groupby, islice
-from enum import Enum
 
+from slicer_download import (
+    getServerAPI,
+    ServerAPI,
+    openDb
+)
 
 SUPPORTED_OS_CHOICES = (
     'macosx',
@@ -32,15 +35,6 @@ LOCAL_BITSTREAM_PATH = '/bitstream'
 
 app = flask.Flask(__name__)
 app.config.from_envvar('SLICER_DOWNLOAD_SERVER_CONF')
-
-
-class ServerAPI(Enum):
-    Midas_v1 = 1
-    Girder_v1 = 2
-
-
-def getServerAPI():
-    return ServerAPI[os.getenv("SLICER_DOWNLOAD_SERVER_API", ServerAPI.Midas_v1.name)]
 
 
 def getSourceDownloadURL(package_identifier):
@@ -544,18 +538,6 @@ def dbFilePath():
         return db_file
 
 
-def openDb(database_filepath):
-    """Return opened database connection."""
-
-    if not os.path.isfile(database_filepath):
-        app.logger.error('database file %s does not exist', database_filepath)
-        raise IOError(2, 'No such file or directory', database_filepath)
-
-    database_connection = sqlite3.connect(database_filepath)
-    database_connection.row_factory = sqlite3.Row
-    return database_connection
-
-
 def getRecordsFromDb():
     """Return all records found in the database associated with :func:`dbFilePath()`.
 
@@ -571,6 +553,8 @@ def getRecordsFromDb():
 
     database_filepath = dbFilePath()
     app.logger.info("database_filepath: %s" % database_filepath)
+    if not os.path.isfile(database_filepath):
+        raise IOError(2, 'Database file %s does not exist', database_filepath)
     database_connection = openDb(database_filepath)
     cursor = database_connection.cursor()
 
