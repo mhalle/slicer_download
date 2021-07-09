@@ -49,11 +49,24 @@ def get_cleaned_up_record(record):
             'size': bs['size']
         }
 
+    if getServerAPI() == ServerAPI.Girder_v1:
+        return {
+            'bitstream_id': record['_id'],
+            'filename': '',  # Not supported
+            'os': record['meta']['os'],
+            'arch': record['meta']['arch'],
+            'product_name': record['meta']['baseName'],
+            'codebase': '',  # Not supported
+            'release': record['meta'].get('release', ''),
+            'revision': record['meta']['revision'],
+            'creation_date': record['meta']['build_date'],
+            'checkout_date': '',  # Not supported
+            'size': record['size']
+        }
+
 
 def add_bitstream_info(db, records):
     print("populating 'bsinfo' table")
-    if getServerAPI() == ServerAPI.Girder_v1:
-        return
     for index, record in enumerate(records, start=1):
         progress(index, len(records))
         cleaned = get_cleaned_up_record(record)

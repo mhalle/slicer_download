@@ -72,7 +72,7 @@ def build_bitstream_table(db):
     with db as cur:
         print("executing 'BitstreamQuery'")
         for row in cur.execute(BitstreamQuery):
-            bitstream_id = int(row['bitstream_id'])
+            bitstream_id = row['bitstream_id']
             name = row['filename']
             match = versionRE.match(name)
             if match:
@@ -116,7 +116,7 @@ def build_access_table(db):
                 location_id += 1
                 location_lookup[locs] = loci
                 location_cache.append(locs)
-            access_table.append((int(row['bitstream_id']),
+            access_table.append((row['bitstream_id'],
                     row['ts'][0:16],
                     row['country_code'],
                     loci))

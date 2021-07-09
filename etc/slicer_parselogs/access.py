@@ -4,8 +4,15 @@ import gzip
 import os
 import apache_log_parser
 
+from slicer_download import (
+    getServerAPI,
+    ServerAPI
+)
 
-bitstreamRE = re.compile(r'/bitstream/(\d+)')
+bitstreamRE = {
+    ServerAPI.Midas_v1: re.compile(r'/bitstream/(\d+)'),
+    ServerAPI.Girder_v1: re.compile(r'/bitstream/([a-fA-F\d]{24})')
+}
 
 
 def create_access_table(db):
@@ -25,7 +32,7 @@ def add_access_info(db, filenames):
     print("populating 'access' table")
     for access in read_and_parse(filenames):
         req = access['request_url_path']
-        m = bitstreamRE.match(req)
+        m = bitstreamRE[getServerAPI()].match(req)
         if not m:
             continue
 
@@ -44,13 +51,14 @@ def read_and_parse(filenames):
        yield each parsed bitsteam download event."""
     log_parser = create_log_parser()
     for filename in filenames:
+        print("parsing '{0}'".format(filename))
 
         if os.path.splitext(filename)[1] == '.gz':
             fp = gzip.open(filename, 'rt')
         else:
             fp = open(filename)
         for line in fp:
-            if not bitstreamRE.search(line):
+            if not bitstreamRE[getServerAPI()].search(line):
                 # if no bitstream ID, don't go any further
                 continue
             try:
