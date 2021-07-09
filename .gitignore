@@ -5,6 +5,8 @@ tmp/
 dist/
 etc/geoip/db/*.mmdb
 bin/.start_environment
+bin/github-release
+bin/linux-amd64-github-release.bz2
 etc/fallback/*
 !etc/fallback/.keep
 var/*
