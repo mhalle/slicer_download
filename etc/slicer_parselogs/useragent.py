@@ -41,7 +41,7 @@ def add_useragent_info(db):
         user_agent = ua[0]
         if user_agent in ua_completed:
             continue
-        ua_rec = user_agent_parser.Parse(str(ua))
+        ua_rec = user_agent_parser.Parse(user_agent)
         if not ua_rec:
             continue
 
