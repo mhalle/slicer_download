@@ -33,8 +33,8 @@ else
   echo "[not found]"
 fi
 
-LOG_DIR=${LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")}
-mkdir -p ${LOG_DIR}
+APP_LOG_DIR=${APP_LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")}
+mkdir -p ${APP_LOG_DIR}
 
 export SLICER_DOWNLOAD_SERVER_CONF="${SLICER_DOWNLOAD_SERVER_CONF:-${ROOT_DIR}/etc/conf/config.py}"
 HTTP_PORT="${HTTP_PORT:-53683}"
@@ -60,7 +60,7 @@ echo
 ${UWSGI_EXECUTABLE} \
   --ini ${ROOT_DIR}/etc/uwsgi.ini \
   --set-placeholder root_dir=${ROOT_DIR} \
-  --set-placeholder log_dir=${LOG_DIR} \
+  --set-placeholder log_dir=${APP_LOG_DIR} \
   --set-placeholder tmp_dir=${TMP_DIR} \
   --set-placeholder virtualenv_dir=${VIRTUALENV_DIR} \
   --set-placeholder http_port=${HTTP_PORT}
@@ -79,7 +79,7 @@ echo "  SLICER_DOWNLOAD_SERVER_API : ${SLICER_DOWNLOAD_SERVER_API}"
 echo
 echo "[slicer_download] Using these directories"
 echo "  ROOT_DIR       : ${ROOT_DIR}"
-echo "  LOG_DIR        : ${LOG_DIR}"
+echo "  APP_LOG_DIR    : ${APP_LOG_DIR}"
 echo "  TMP_DIR        : ${TMP_DIR}"
 echo "  VIRTUALENV_DIR : ${VIRTUALENV_DIR}"
 echo "  PIDFILE        : ${PIDFILE}"

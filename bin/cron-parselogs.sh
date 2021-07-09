@@ -25,9 +25,9 @@ SLICER_DOWNLOAD_STATS_DATA_FILE="${ROOT_DIR}/var/slicer-download-data.json"
 GEOIP_DB_DIR=${ROOT_DIR}/etc/geoip/db
 GEOIP_DB_FILE="${GEOIP_DB_DIR}/GeoLite2-City.mmdb"
 
-LOG_DIR=${LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/apps/slicer_download")}
+SITE_LOG_DIR=${SITE_LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/sites/slicer_download_org")}
 
-SLICER_DOWNLOAD_ACCESS_LOGS="${LOG_DIR}/access*"
+SLICER_DOWNLOAD_ACCESS_LOGS="${SITE_LOG_DIR}/access*"
 # SLICER_DOWNLOAD_ACCESS_LOGS="${ROOT_DIR}/../logs/sites/download_slicer_org/access*"
 # EXTRALOGS="${ROOT_DIR}/legacy-logs/*"
 EXTRALOGS=""
@@ -43,7 +43,7 @@ echo "  GEOIP_DB_FILE                    : ${GEOIP_DB_FILE}"
 echo
 echo "[slicer_parselogs] Using these directories"
 echo "  ROOT_DIR       : ${ROOT_DIR}"
-echo "  LOG_DIR        : ${LOG_DIR}"
+echo "  SITE_LOG_DIR   : ${SITE_LOG_DIR}"
 
 echo
 export PYTHONPATH=${ROOT_DIR}:${ROOT_DIR}/etc
