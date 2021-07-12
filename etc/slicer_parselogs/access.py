@@ -53,6 +53,10 @@ def read_and_parse(filenames):
     for filename in filenames:
         print("parsing '{0}'".format(filename))
 
+        if not os.path.exists(filename):
+            print("failed to open '{0}': file do not exist !".format(filename), file=sys.stderr)
+            continue
+
         if os.path.splitext(filename)[1] == '.gz':
             fp = gzip.open(filename, 'rt')
         else:
