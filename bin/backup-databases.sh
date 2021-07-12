@@ -8,6 +8,8 @@ ROOT_DIR=$(realpath "${script_dir}/..")
 VIRTUALENV_DIR=$(realpath -m "${ROOT_DIR}/env")
 PYTHON_EXECUTABLE=${VIRTUALENV_DIR}/bin/python
 
+DATABASE_BACKUPS_GITHUB_REPO=slicer_download_database_backups
+
 # Customizing environment
 echo -n "[backup_database] Looking for ${script_dir}/.start_environment "
 if [ -e "${script_dir}/.start_environment" ]; then
@@ -53,6 +55,7 @@ echo
 echo "[backup_database] Using this config"
 echo "  SLICER_DOWNLOAD_SERVER_CONF     : ${SLICER_DOWNLOAD_SERVER_CONF}"
 echo "  SLICER_DOWNLOAD_SERVER_API      : ${SLICER_DOWNLOAD_SERVER_API}"
+echo "  DATABASE_BACKUPS_GITHUB_REPO    : ${DATABASE_BACKUPS_GITHUB_REPO}"
 echo
 echo "[backup_database] Database files"
 echo "  SLICER_DOWNLOAD_DB_FILE         : ${SLICER_DOWNLOAD_DB_FILE}"
@@ -134,7 +137,7 @@ ${GITHUB_RELEASE_EXECUTABLE} \
     --security-token "${SLICER_BACKUP_DATABASE_GITHUB_TOKEN}" \
     --json \
     --user Slicer \
-    --repo slicer_download \
+    --repo ${DATABASE_BACKUPS_GITHUB_REPO} \
     --tag database-backups \
     | jq '.Releases[] | select(.tag_name == "database-backups") | .assets[] | {name,size}' > ${CURRENT_DATABASE_BACKUPS_JSON}
 
@@ -144,7 +147,7 @@ DATABASE_BACKUPS_MARKDOWN=$(${GITHUB_RELEASE_EXECUTABLE} \
     --security-token "${SLICER_BACKUP_DATABASE_GITHUB_TOKEN}" \
     --json \
     --user Slicer \
-    --repo slicer_download \
+    --repo ${DATABASE_BACKUPS_GITHUB_REPO} \
     --tag database-backups \
     | jq -r '.Releases[] | select(.tag_name == "database-backups") | .body')
 
@@ -185,13 +188,13 @@ for path in \
     upload \
       --security-token "${SLICER_BACKUP_DATABASE_GITHUB_TOKEN}" \
       --user Slicer \
-      --repo slicer_download \
+      --repo ${DATABASE_BACKUPS_GITHUB_REPO} \
       --tag database-backups \
       --name ${backup_filename} \
       --file ${backup_filepath}
 
   asset_sha256=$(sha256sum ${backup_filepath} | cut -d " " -f1)
-  asset_download_base_url="https://github.com/Slicer/slicer_download/releases/download/database-backups/"
+  asset_download_base_url="https://github.com/Slicer/${DATABASE_BACKUPS_GITHUB_REPO}/releases/download/database-backups/"
   asset_markdown="* [${backup_filename}](${asset_download_base_url}/${backup_filename})
   - SHA256: \`${asset_sha256}\`"
   DATABASE_BACKUPS_MARKDOWN="${DATABASE_BACKUPS_MARKDOWN}
@@ -204,7 +207,7 @@ ${asset_markdown}"
     edit \
       --security-token "${SLICER_BACKUP_DATABASE_GITHUB_TOKEN}" \
       --user Slicer \
-      --repo slicer_download \
+      --repo ${DATABASE_BACKUPS_GITHUB_REPO} \
       --tag database-backups \
       --description "${DATABASE_BACKUPS_MARKDOWN}"
 done
