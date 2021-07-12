@@ -26,6 +26,7 @@ GEOIP_DB_DIR=${ROOT_DIR}/etc/geoip/db
 GEOIP_DB_FILE="${GEOIP_DB_DIR}/GeoLite2-City.mmdb"
 
 SITE_LOG_DIR=${SITE_LOG_DIR:-$(realpath -m "${ROOT_DIR}/../logs/sites/slicer_download_org")}
+mkdir -p ${SITE_LOG_DIR}
 
 SLICER_DOWNLOAD_ACCESS_LOGS="${SITE_LOG_DIR}/access*"
 # SLICER_DOWNLOAD_ACCESS_LOGS="${ROOT_DIR}/../logs/sites/download_slicer_org/access*"
